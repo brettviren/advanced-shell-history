@@ -1,0 +1,63 @@
+#
+#   Copyright 2011 Carl Anderson
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+
+
+DEMO: {
+  description: "Shows who, what, where and when (not WHY)."
+  sql: {
+    select
+      s.logname as who,
+      c.cwd as 'where',
+      datetime(c.start_time, 'unixepoch', 'localtime') as 'when',
+      c.command as what
+    from
+      commands as c
+      inner join sessions as s
+        on c.session_id = s.id
+    ;
+  }
+}
+
+
+CWD: {
+  description: "Shows the history for the current working directory only."
+  sql: {
+    select
+      datetime(c.start_time, 'unixepoch', 'localtime') as "when",
+      c.command as "what"
+    from
+      commands as c
+    where
+      c.cwd = '${PWD}' or c.cwd = '/${PWD}' or c.cwd = '/${PWD#//}'
+    ;
+  }
+}
+
+
+RCWD: {
+  description: "Shows the history rooted at the current working directory."
+  sql: {
+    select
+      datetime(c.start_time, 'unixepoch', 'localtime') as "when",
+      c.command as "what"
+    from
+      commands as c
+    where
+      c.cwd = '${PWD}' or c.cwd = '/${PWD}'
+      or c.cwd like '${PWD}/%' or c.cwd like '/${PWD}/%'
+    ;
+  }
+}
