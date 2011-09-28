@@ -168,6 +168,7 @@ int main(int argc, char ** argv) {
   CsvFormatter::init();
   NullFormatter::init();
   SpacedFormatter::init();
+  GroupedFormatter::init();
 
   // Diaplay the available format names.
   if (FLAGS_list_formats) {

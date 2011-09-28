@@ -97,14 +97,11 @@ void SpacedFormatter::init() {
 
 
 /**
- * Calculates the ideal width for each column and inserts column data
- * left-aligned and separated by spaces.
+ * Returns the maximum widths required for each column in a result set.
  */
-void SpacedFormatter::insert(const ResultSet * rs, ostream & out) const {
-  if (!rs) return;  // Sanity check.
-
-  const size_t XX = 4;  // The number of spaces between columns.
+vector<size_t> get_widths(const ResultSet * rs, bool do_show_headings) {
   vector<size_t> widths;
+  const size_t XX = 4;  // The number of spaces between columns.
 
   // Initialize with the widths of the headings.
   size_t c = 0;
@@ -125,9 +122,22 @@ void SpacedFormatter::insert(const ResultSet * rs, ostream & out) const {
     }
   }
 
+  return widths;
+}
+
+/**
+ * Calculates the ideal width for each column and inserts column data
+ * left-aligned and separated by spaces.
+ */
+void SpacedFormatter::insert(const ResultSet * rs, ostream & out) const {
+  if (!rs) return;  // Sanity check.
+
+  vector<size_t> widths = get_widths(rs, do_show_headings);
+
   // Print the headings, if not suppressed.
   if (do_show_headings) {
-    c = 0;
+    size_t c = 0;
+    ResultSet::HeadersType::const_iterator i, e;
     for (i = (rs -> headers).begin(), e = (rs -> headers).end(); i != e; ++i)
       out << left << setw(widths[c++]) << *i;
     out << endl;
@@ -182,7 +192,7 @@ void CsvFormatter::init() {
 
 
 /**
- *
+ * Inserts data separated by commas.
  */
 void CsvFormatter::insert(const ResultSet * rs, ostream & out) const {
   insert_delimited(rs, out, ",", do_show_headings);
@@ -199,9 +209,116 @@ void NullFormatter::init() {
 
 
 /**
- *
+ * Inserts data separated by \0 characters.
  */
 void NullFormatter::insert(const ResultSet * rs, ostream & out) const {
   insert_delimited(rs, out, string("\0", 1), do_show_headings);
+}
+
+
+/**
+ * Makes this Formatter avaiable for use within the program.
+ */
+void GroupedFormatter::init() {
+  static GroupedFormatter instance("auto",
+    "Automatically group redundant values.");
+}
+
+
+/**
+ * Determines how many levels should be auto-grouped.
+ */
+int get_grouped_level_count(const ResultSet * rs, const vector<size_t> & widths)
+{
+  if (!rs) return 0;  // Sanity check.
+
+  size_t width = 0, length = rs -> rows;
+  for (size_t i = 0, e = widths.size(); i != e; ++i) width += widths[i];
+
+  size_t levels = 0;
+  
+  string prev;
+  for (size_t c = 0, cols = rs -> columns; c < cols; ++c) {
+    prev = "";
+    size_t proposed_len = length;
+    for (size_t r = 0, rows = rs -> rows; r < rows; ++r) {
+      if (prev != rs -> data[r][c]) {
+        ++proposed_len;
+        prev = rs -> data[r][c];
+      }
+    }
+    size_t XX = 4;
+    size_t proposed_width = max(width - widths[c], widths[c]) + XX * (levels + 1);
+    if (width * length < proposed_width * proposed_len) {
+      LOG(DEBUG) << "auto-grouping formatter detected optimal level: " << levels;
+      return levels;
+    }
+    ++levels;
+    width = proposed_width;
+    length = proposed_len;
+  }
+  return levels;
+}
+
+
+/**
+ * Inserts auto-grouped history, starting with the leftmost columns.
+ */
+void GroupedFormatter::insert(const ResultSet * rs, ostream & out) const {
+  if (!rs) return;  // Sanity check.
+
+  vector<size_t> widths = get_widths(rs, do_show_headings);
+  size_t levels = get_grouped_level_count(rs, widths);
+
+  if (do_show_headings) {
+    ResultSet::HeadersType::const_iterator h = rs -> headers.begin();
+    for (size_t c = 0, cols = rs -> columns; c < cols; ++c) {
+      if (c < levels) {
+        out << *h << "\n";
+        for (size_t i = c + 1; i > 0; --i) out << "    ";
+      } else {
+        if (c < cols - 1) {
+          out << left << setw(widths[c]) << *h;
+        } else {
+          out << *h;
+        }
+      }
+      ++h;
+    }
+    out << endl;
+  }
+  
+  vector<string> prev(levels);
+  string value;
+  for (size_t r = 0, rows = rs -> rows; r < rows; ++r) {
+    for (size_t c = 0, cols = rs -> columns; c < cols; ++c) {
+      value = rs -> data[r][c];
+      if (c < levels) {
+        if (value != prev[c] || r == 0) {
+          // The value has not been grouped, 
+          out << value;
+          if (c < cols - 1) {
+            // Since it's not the final column, wrap the line and indent
+            // to the next level in preparation for the next value.
+            out << "\n";
+            for (size_t i = c + 1; i > 0; --i) out << "    ";
+            for (size_t i = c; i < levels; ++i) prev[i] = "";
+          }
+          prev[c] = value;
+        } else {
+          // The value has been grouped, only print the indent.
+          out << "    ";
+        }
+      } else {
+        // Normal (non-grouped) case.
+        if (c < cols - 1) {
+          out << left << setw(widths[c]) << value;
+        } else {
+          out << value;
+        }
+      }
+    }
+    out << endl;
+  }
 }
 

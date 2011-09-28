@@ -104,6 +104,13 @@ FORMATTER(Csv);
 
 
 /**
+ * Singleton class that converts a result set into output, collapsing repeated
+ * values on the left edge if the net result saves printed space.
+ */
+FORMATTER(Grouped);
+
+
+/**
  * Singleton class that converts a result set into output, delimiting all
  * columns with \0 characters (NULL).
  */
