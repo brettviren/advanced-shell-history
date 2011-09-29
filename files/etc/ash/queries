@@ -16,10 +16,11 @@
 
 
 DEMO: {
-  description: "Shows who, what, where and when (not WHY)."
+  description: "Shows who did what, where and when (not WHY)."
   sql: {
     select
       s.logname as who,
+      c.session_id,
       c.cwd as 'where',
       datetime(c.start_time, 'unixepoch', 'localtime') as 'when',
       c.command as what
@@ -27,6 +28,7 @@ DEMO: {
       commands as c
       inner join sessions as s
         on c.session_id = s.id
+    order by 1, 2, 4
     ;
   }
 }
@@ -36,12 +38,14 @@ CWD: {
   description: "Shows the history for the current working directory only."
   sql: {
     select
+      c.session_id as "session",
       datetime(c.start_time, 'unixepoch', 'localtime') as "when",
       c.command as "what"
     from
       commands as c
     where
       c.cwd = '${PWD}' or c.cwd = '/${PWD}' or c.cwd = '/${PWD#//}'
+    order by 2, 1
     ;
   }
 }
@@ -51,6 +55,8 @@ RCWD: {
   description: "Shows the history rooted at the current working directory."
   sql: {
     select
+      c.session_id as "session",
+      c.cwd as "where",
       datetime(c.start_time, 'unixepoch', 'localtime') as "when",
       c.command as "what"
     from
@@ -58,6 +64,30 @@ RCWD: {
     where
       c.cwd = '${PWD}' or c.cwd = '/${PWD}'
       or c.cwd like '${PWD}/%' or c.cwd like '/${PWD}/%'
+    order by c.id
+    ;
+  }
+}
+
+
+ME: {
+  description: "Select the history for just the current session."
+  sql: {
+    select
+      c.cwd as 'current_working_dir',
+      c.command_no as 'cmd',
+      datetime(c.start_time, 'unixepoch', 'localtime') as start_time,
+      c.duration as 'secs',
+      c.rval as exit,
+      c.command
+    from
+      commands as c
+      left outer join sessions as s
+        on c.session_id = s.id
+    where
+      c.session_id = ${ASH_SESSION_ID:-0}
+    order by
+      c.id
     ;
   }
 }

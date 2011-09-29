@@ -1,5 +1,4 @@
 TODO
-  [ ] either implement the grouping formatter or remove it from the code.
   [ ] generate a doxyfile for code documentation and add to the master Makefile a 'make docs' target.
   [ ] add more logging throughout the system.
   [ ] add an option for a formatter that includes visible pipe separators between aligned columns
@@ -30,6 +29,5 @@ WISHLIST (harder things that would be nice to have):
   [ ] find a safe way to get the 'builtin type' details for a command (without re-executing it)
   [ ]   add an option to ignore non-commands: ASH_CFG_IGNORE_NON_COMMANDS='true'  # this avoids keeping passwords and/or junk commands in your database.
   [ ] make LOG(ERROR) and above also go to stderr - this is actually not easy, given the way the logger works now.
-  [ ] write a formatter that collapses repeated column values automatically - the auto_group formatter
   [ ] design a shell history function that attempts to intercept builtin history calls and redirect to builtin history wherever necessary ???
   [ ] 

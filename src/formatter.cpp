@@ -113,7 +113,7 @@ vector<size_t> get_widths(const ResultSet * rs, bool do_show_headings) {
       widths.push_back(XX);
 
   // Limit the width of columns containing very wide elements.
-  size_t max_w = 80;  // TODO(cpa): make this a flag.
+  size_t max_w = 80;  // TODO(cpa): make this a flag or configurable.
 
   // Loop ofer the rs.data looking for max column widths.
   for (size_t r = 0; r < rs -> rows; ++r) {
@@ -124,6 +124,7 @@ vector<size_t> get_widths(const ResultSet * rs, bool do_show_headings) {
 
   return widths;
 }
+
 
 /**
  * Calculates the ideal width for each column and inserts column data
@@ -136,17 +137,20 @@ void SpacedFormatter::insert(const ResultSet * rs, ostream & out) const {
 
   // Print the headings, if not suppressed.
   if (do_show_headings) {
-    size_t c = 0;
+    size_t c = 0, cols = widths.size();
     ResultSet::HeadersType::const_iterator i, e;
-    for (i = (rs -> headers).begin(), e = (rs -> headers).end(); i != e; ++i)
-      out << left << setw(widths[c++]) << *i;
+    for (i = (rs -> headers).begin(), e = (rs -> headers).end(); i != e; ++i) {
+      if (c < cols - 1) out << left << setw(widths[c++]);
+      out << *i;
+    }
     out << endl;
   }
 
   // Iterate over the data once more, printing.
   for (size_t r = 0; r < rs -> rows; ++r) {
     for (size_t c = 0; c < rs -> columns; ++c) {
-      out << left << setw(widths[c]) << (rs -> data)[r][c];
+      if (c < rs -> columns - 1) out << left << setw(widths[c]);
+      out << (rs -> data)[r][c];
     }
     out << endl;
   }
@@ -232,32 +236,49 @@ int get_grouped_level_count(const ResultSet * rs, const vector<size_t> & widths)
 {
   if (!rs) return 0;  // Sanity check.
 
-  size_t width = 0, length = rs -> rows;
+  size_t width = 0, length = rs -> rows, XX = 4;
   for (size_t i = 0, e = widths.size(); i != e; ++i) width += widths[i];
+  size_t min_area = length * width;
+  
+  // examine the columns from left to right simulating how much screen space
+  // would be saved by grouping that column.  If there is a net reduction in
+  // screen 'area', then the column will be grouped.  Otherwise it will not.
 
-  size_t levels = 0;
+  // store area of output after simulating grouping at each level successively.
+  // the rightmost minimum area will be chosen.
+  //
+  // For example, consider the following areas after simulating grouping:
+  //   areas = [100, 90, 92, 90, 140, 281]
+  //
+  // With 1 level of grouping and with 3 levels of grouping we get the same
+  // screen area, however the rightmost value is chosen, so the return value
+  // will be 3.
+  vector<size_t> areas(widths.size(), width * length);
   
   string prev;
   for (size_t c = 0, cols = rs -> columns; c < cols; ++c) {
+    // test each row in the column to see if it is a duplicate of the previous
+    // row.  If so, it will be de-duped in the output.  If not, it means an
+    // extra row will be added, so we adjust the new_len variable accordingly.
     prev = "";
-    size_t proposed_len = length;
     for (size_t r = 0, rows = rs -> rows; r < rows; ++r) {
       if (prev != rs -> data[r][c]) {
-        ++proposed_len;
+        ++length;
         prev = rs -> data[r][c];
       }
     }
-    size_t XX = 4;
-    size_t proposed_width = max(width - widths[c], widths[c]) + XX * (levels + 1);
-    if (width * length < proposed_width * proposed_len) {
-      LOG(DEBUG) << "auto-grouping formatter detected optimal level: " << levels;
-      return levels;
-    }
-    ++levels;
-    width = proposed_width;
-    length = proposed_len;
+    // to calculate the new width, we need to consider both the width of the 
+    // grouped column and the width of the remaining columns.  we also need to
+    // consider the width of the indent.
+    width = max(width - widths[c], widths[c]) + XX * (c + 1);
+    min_area = min(length * width, min_area);
+    if (c < rs -> columns - 1) areas[c + 1] = width * length;
   }
-  return levels;
+  // Find the rightmost minimum area from all simulated areas.
+  for (size_t c = rs -> columns; c > 0; --c) {
+    if (areas[c - 1] == min_area) return c - 1;
+  }
+  return 0;
 }
 
 
@@ -274,9 +295,14 @@ void GroupedFormatter::insert(const ResultSet * rs, ostream & out) const {
     ResultSet::HeadersType::const_iterator h = rs -> headers.begin();
     for (size_t c = 0, cols = rs -> columns; c < cols; ++c) {
       if (c < levels) {
+        // if it's a grouped column, print it followed by a newline and an
+        // indent for the next line.
         out << *h << "\n";
         for (size_t i = c + 1; i > 0; --i) out << "    ";
       } else {
+        // if it's not the last column, we set the alignment left and pad the
+        // value with spaces.  Otherwise we just print the value to remove
+        // trailing spaces from the last value.
         if (c < cols - 1) {
           out << left << setw(widths[c]) << *h;
         } else {
