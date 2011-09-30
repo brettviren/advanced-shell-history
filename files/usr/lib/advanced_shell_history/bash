@@ -15,6 +15,9 @@
 #   limitations under the License.
 #
 
+# Prevent errors from sourcing this file mor than once.
+[[ -n "${ASH_SESSION_ID}" ]] && return
+
 # Make sure we are running the shell we think we are running.
 if ! ps ho cmd $$ | grep -q "bash"; then
   echo "The shell process name implies you're not running bash..."
