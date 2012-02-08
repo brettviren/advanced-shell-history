@@ -25,19 +25,20 @@ CPPS	:= $(shell ls *.cpp)
 TRASH	:= ${OBJS} ${EXES} core
 CPP	:= g++
 C	:= gcc
-FLAGS	:= -g -Wall -DASH_VERSION="\"${VERSION}\"" -ansi -pedantic -O2 -lrt
+FLAGS	:= -g -Wall -DASH_VERSION="\"${VERSION}\"" -ansi -pedantic -O2
+RT_LIB	:= -lrt
 
 .PHONY:	all clean distclean new reallyclean
 all:	${EXES}
 
 ${QUERIER}: sqlite3.o ${OBJ_Q}
-	${CPP} ${FLAGS} -o ${@} ${<} ${OBJ_Q}
+	${CPP} ${FLAGS} -o ${@} ${<} ${OBJ_Q} ${RT_LIB}
 
 ${LOGGER}: sqlite3.o ${OBJ_L}
-	${CPP} ${FLAGS} -o ${@} ${<} ${OBJ_L}
+	${CPP} ${FLAGS} -o ${@} ${<} ${OBJ_L} ${RT_LIB}
 
 %.o:	%.cpp %.hpp
-	${CPP} -c ${FLAGS} -o ${@} ${<}
+	${CPP} -c ${FLAGS} -o ${@} ${<} ${RT_LIB}
 
 queries.cpp: queries.hpp queries.l
 	flex -o queries.cpp queries.l
