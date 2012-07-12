@@ -85,9 +85,9 @@ function precmd() {
 
   if [[ -z ${ASH_DISABLED:-} ]]; then
     if [[ -z ${ASH_SESSION_ID:-} ]]; then
-      export ASH_SESSION_ID="$( _ash_log --get_session_id )"
+      export ASH_SESSION_ID="$( ${ASH_LOG_BIN} --get_session_id )"
       if [[ -n ${ASH_CFG_MOTD:-} ]]; then
-        _ash_log -a "${ASH_CFG_MOTD}session ${ASH_SESSION_ID}"
+        ${ASH_LOG_BIN} -a "${ASH_CFG_MOTD}session ${ASH_SESSION_ID}"
       fi
     else
       ASH=1 ash::log ${ASH_PIPESTATUS[@]}
@@ -97,5 +97,5 @@ function precmd() {
 
   local rval=${ASH_PIPESTATUS[1]}
   ASH_PIPESTATUS=( ${ASH_PIPESTATUS[2,-1]} )
-  _ash_log --exit ${rval:-1}
+  ${ASH_LOG_BIN} --exit ${rval:-1}
 }

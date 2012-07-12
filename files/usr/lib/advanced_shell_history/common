@@ -18,23 +18,32 @@
 # This file is intended to be common shell code for both zsh and bash.
 #
 
+# Make sure there is a command logger.
+if [[ -z "${ASH_LOG_BIN}" ]]; then
+  ASH_LOG_BIN=/usr/local/bin/_ash_log
+fi
+if ! [[ -x "${ASH_LOG_BIN}" ]]; then
+  return
+fi
+
+
 # Create the directory holding the history database.
 if [[ ! -e "${ASH_CFG_HISTORY_DB}" ]]; then
   mkdir -p "$( dirname "${ASH_CFG_HISTORY_DB}" )" \
-    || _ash_log -a "Failed to mkdir -p $( dirname "${ASH_CFG_HISTORY_DB}" )"
+    || ${ASH_LOG_BIN} -a "Failed to mkdir -p $( dirname "${ASH_CFG_HISTORY_DB}" )"
 fi
 
 
 # Ensure there is a HISTFILE.
 if [[ -z "${HISTFILE}" ]]; then
   export HISTFILE="${ASH_CFG_HISTORY_DB%.db}"
-  _ash_log -a "WARN: HISTFILE undefined. Exporting HISTFILE as: '${HISTFILE}'."
+  ${ASH_LOG_BIN} -a "WARN: HISTFILE undefined. Exporting HISTFILE as: '${HISTFILE}'."
 fi
 if [[ ! -e "${HISTFILE}" ]] && ! touch "${HISTFILE}" &>/dev/null; then
-  _ash_log -a "Failed to create shell history file: '${HISTFILE}'."
+  ${ASH_LOG_BIN} -a "Failed to create shell history file: '${HISTFILE}'."
 fi
 if ! chmod u+rw "${HISTFILE}" &>/dev/null; then
-  _ash_log -a "Failed to make shell history file readable and writeable."
+  ${ASH_LOG_BIN} -a "Failed to make shell history file readable and writeable."
 fi
 
 
@@ -67,7 +76,7 @@ function ash::end_session() {
   [[ "${ASH:-0}" == "0" ]] && ash::info ash::end_session && return
 
   ash::log "${@}"
-  _ash_log --end_session --exit ${1}
+  ${ASH_LOG_BIN} --end_session --exit ${1}
 }
 
 # This is executed when the user types 'exit'
@@ -103,7 +112,7 @@ function ash::log() {
   local pipes="$( sed -e 's: :_:g' <<< "${@}" )"
 
   # Log the command.
-  _ash_log \
+  ${ASH_LOG_BIN} \
     -e ${rval:-0} \
     -s ${start:-0} \
     -f ${end:-0} \

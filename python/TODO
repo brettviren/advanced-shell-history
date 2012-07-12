@@ -1,0 +1,19 @@
+TODO
+  [ ] database class
+    ( ) - open or create the database defined in the environment
+    ( ) - time the DB writes and timeout if over the threshold
+    ( ) - 
+  [ ] querying application
+    ( ) - parse flags (argparse?)
+    ( ) - mimic c++ functionality
+    ( ) - 
+  [ ] logging application
+    ( ) - write the command to the DB
+    ( ) - handle flags
+    ( ) - investigate the argparse module for python
+    ( ) - 
+  [ ] logger class
+    ( ) - use the python 'logging' module
+    ( ) - 
+  [ ] 
+    ( ) - 

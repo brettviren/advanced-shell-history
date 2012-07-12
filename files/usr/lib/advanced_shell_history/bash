@@ -44,7 +44,7 @@ source "${ASH_CFG_LIB}/common" || exit 1
 # Display error and abort if PROMPT_COMMAND is readonly.
 if readonly -p | grep -q "^declare -[[:alpha:]]\+ PROMPT_COMMAND="; then
   if [[ "${PROMPT_COMMAND//ash::/}" == "${PROMPT_COMMAND}" ]]; then
-    _ash_log -a "Make PROMPT_COMMAND writable to save advanced shell history."
+    ${ASH_LOG_BIN} -a "Make PROMPT_COMMAND writable to save advanced shell history."
     return
   fi
 fi
@@ -69,9 +69,9 @@ function ash::begin_session() {
   [[ "${ASH:-0}" == "0" ]] && ash::info ash::begin_session && return
 
   export PROMPT_COMMAND="ASH=1 ash::precmd \${?} \${PIPESTATUS[@]}"
-  export ASH_SESSION_ID="$( _ash_log --get_session_id )"
+  export ASH_SESSION_ID="$( ${ASH_LOG_BIN} --get_session_id )"
   if [[ -n "${ASH_CFG_MOTD:-}" ]]; then
-    _ash_log -a "${ASH_CFG_MOTD}session ${ASH_SESSION_ID}"
+    ${ASH_LOG_BIN} -a "${ASH_CFG_MOTD}session ${ASH_SESSION_ID}"
   fi
   readonly ASH_SESSION_ID PROMPT_COMMAND
 }
@@ -95,7 +95,7 @@ function ash::precmd() {
   # Causes the exit code to be reset to what it was before logging.
   local rval=${1:-0} && shift
   ASH_PIPESTATUS=( ${@:-0} )
-  _ash_log --exit ${rval}
+  ${ASH_LOG_BIN} --exit ${rval}
 }
 
 

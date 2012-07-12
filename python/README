@@ -1,0 +1,12 @@
+I'm starting a Python rewrite of the C++ code.
+
+Partly because it's easier:
+  - there is a native Python flag parsing library
+  - Python comes integrated with sqlite3
+
+I wrote the initial version in C++ for performance reasons, but am finding that
+there are unforseen compilation issues with it.  Some architectures do not
+support the realtime clock that I'm using.
+
+Also, on most systems, calling Python once per command is not a terrible price
+to pay.
