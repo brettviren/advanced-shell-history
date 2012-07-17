@@ -16,10 +16,10 @@
 #   limitations under the License.
 #
 #
-# This script attempts to fetch the SQLite3 amalgamation tarball using either
+# This script attempts to fetch the latest argparse tarball using either
 # wget or curl (whichever is available).
 #
-# Alternatively, you can download the zip file yourself and leave it in this
+# Alternatively, you can download the tarball yourself and leave it in this
 # directory to be unpacked by this script.
 #
 # Note: this script is invoked by the Makefile, you should not need to invoke
@@ -89,7 +89,7 @@ function get_argparse() {
   fetch "${ARGPARSE_URL}" "${ARGPARSE_ZIP}"
 }
 
-# Download an amalgamation, if necessary.
+# Download the tarball, if necessary.
 if [ -e argparse-*.tar.gz ]; then
   ARGPARSE_ZIP="$( ls argparse-*.tar.gz | head -n1 )"
   ARGPARSE_DIR="${ARGPARSE_ZIP%.tar.gz}"

@@ -9,8 +9,8 @@ TODO
     ( ) - 
   [ ] logging application
     ( ) - write the command to the DB
-    ( ) - handle flags
-    ( ) - investigate the argparse module for python
+    (x) - handle flags
+    (x) - investigate the argparse module for python
     ( ) - 
   [ ] logger class
     ( ) - use the python 'logging' module

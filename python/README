@@ -1,7 +1,7 @@
 I'm starting a Python rewrite of the C++ code.
 
 Partly because it's easier:
-  - there is a native Python flag parsing library
+  - there is a native Python flag parsing library in 2.7+ (argparse)
   - Python comes integrated with sqlite3
 
 I wrote the initial version in C++ for performance reasons, but am finding that

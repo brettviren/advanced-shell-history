@@ -31,7 +31,7 @@ all:	version build man
 new:	clean all
 
 version:
-	sed -i -e "/^VERSION :=/s/:= .*/:= ${RVERSION}/" src/Makefile
+	sed -i -e "/^VERSION :=/s/:= .*/:= ${RVERSION}/" {src,python}/Makefile
 
 build:
 	@ printf "\nCompiling source code...\n"

@@ -13,6 +13,14 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+VERSION := 0.2.r113
+ASH_LOG := ash_log.py
+
+.default: version
+
+version:
+	sed -i -e "s:^ASH_VERSION = .*:ASH_VERSION = '${VERSION}':" ${ASH_LOG}
+
 argparse.py:
 	./fetch_argparse.sh
 
