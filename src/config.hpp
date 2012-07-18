@@ -28,7 +28,7 @@ namespace ash {
 
 /**
  * This class contains all the environment variable values for variables named
- * with a common prefix: ASH_
+ * with a common prefix: ASH_CFG_
  */
 class Config {
   // STATIC:

@@ -19,7 +19,7 @@ ASH_LOG := ash_log.py
 .default: version
 
 version:
-	sed -i -e "s:^ASH_VERSION = .*:ASH_VERSION = '${VERSION}':" ${ASH_LOG}
+	sed -i -e "s:^__version__ = .*:__version__ = '${VERSION}':" ${ASH_LOG}
 
 argparse.py:
 	./fetch_argparse.sh
