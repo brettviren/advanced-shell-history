@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-VERSION := 0.2.r113
+VERSION := 0.2.r115
 LOGGER	:= _ash_log
 QUERIER	:= ash_query
 EXES	:= ${LOGGER} ${QUERIER}

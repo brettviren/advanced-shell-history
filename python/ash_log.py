@@ -13,23 +13,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-  This module logs a command into a command history database, while also
-  gathering system-specific metadata.
+#
+"""A module to log commands and shell session details into a sqlite3 database.
+
+This module logs a command into a command history database, while also gathering
+system-specific metadata.
 """
 
 __author__ = 'Carl Anderson (carl.anderson@gmail.com)'
 
 # NOTE: This variable is set automatically by the Makefile.
-__version__ = '0.2.r113'
+__version__ = '0.2.r115'
 
 
 import argparse
 import logging
 import os
+import sqlite3
 import sys
+import unix
 
 
+# TODO(cpa): change the base class from ArgumentParser to object.
 class Flags(argparse.ArgumentParser):
   """A class to manage all the flags for the command logger."""
 
@@ -81,6 +86,9 @@ class Config(object):
 
   All environment variables beginning with the prefix 'ASH_CFG_' are loaded
   and made accessible conveniently through an instance of this class.
+
+  For example:
+    ASH_CFG_HISTORY_DB='/foo/' becomes { 'HISTORY_DB': '/foo/' }
   """
 
   def __init__(self):
@@ -132,6 +140,114 @@ def InitLogging():
   logging.basicConfig(**kwargs)
 
 
+class Database(object):
+  """A wrapper around a database connection."""
+
+  class Object(object):
+    """A construct for objects to be inserted into the Database."""
+    def __init__(self, table_name):
+      self.values = {}
+      self.table_name = table_name
+      sql = '''
+        select sql
+        from sqlite_master
+        where
+          type = 'table'
+          and name = ?;
+      '''
+      # Check that the table exists, creating it if not.
+      with Database().cursor as cur:
+        cur.execute(sql, (table_name,))
+        rs = cur.fetchone()
+        if not rs:
+          cur.execute(self.GetCreateTableSql())
+        elif rs[0] != self.GetCreateTableSql():
+          logging.warning('Table %s exists, but has an unexpected schema.' % table_name)
+
+    def Insert(self):
+      """Insert the object into the database, returning the new rowid."""
+      sql = 'INSERT INTO %s ( %s ) VALUES ( %s )' % (
+        self.table_name,
+        ', '.join(self.values),
+        ', '.join(['?' for _ in self.values])
+      )
+      with Database().cursor as cur:
+        cur.execute(sql, tuple(self.values.values()))
+        return cur.lastrowid
+      return 0
+
+  def __init__(self):
+    """Initialize a Database with an open connection to the history database."""
+    db_filename = Config().GetString('HISTORY_DB')
+    # TODO(cpa): test that the file exists and is readable.
+    # TODO(cpa): create the database if it does not exist yet.
+    self.connection = sqlite3.connect(db_filename)
+    self.cursor = self.connection.cursor()
+
+
+class Session(Database.Object):
+  """An abstraction of a shell session to store to the history database."""
+
+  def __init__(self):
+    """Initialize a Session, populating session values."""
+    Database.Object.__init__(self, 'sessions')
+    self.values = {
+      'time_zone': unix.GetTimeZone(),
+      'start_time': unix.GetTime(),
+      'ppid': unix.GetPPID(),
+      'pid': unix.GetPID(),
+      'tty': unix.GetTTY(),
+      'uid': unix.GetUID(),
+      'euid': unix.GetEUID(),
+      'logname': unix.GetLoginName(),
+      'hostname': unix.GetHostName(),
+      'host_ip': unix.GetHostIP(),
+      'shell': unix.GetShell(),
+      'sudo_user': unix.GetEnv('SUDO_USER'),
+      'sudo_uid': unix.GetEnv('SUDO_UID'),
+      'ssh_client': unix.GetEnv('SSH_CLIENT'),
+      'ssh_connection': unix.GetEnv('SSH_CONNECTION')
+    }
+
+  def Close(self):
+    """Closes this session in the database."""
+    sql = '''
+      UPDATE sessions
+      SET
+        end_time = ?,
+        duration = ? - start_time
+      WHERE id == ?;
+    '''
+    with Database().cursor as cur:
+      ts = unix.GetTime()
+      cur.execute(sql, (ts, ts, unix.GetEnvInt('ASH_SESSION_ID'),))
+
+
+class Command(Database.Object):
+  """An abstraction of a command to store to the history database."""
+  def __init__(self, command, rval, start, finish, number, pipes):
+    Database.Object.__init__(self, 'commands')
+    self.values = {
+      'session_id': unix.GetEnvInt('ASH_SESSION_ID'),
+      'shell_level': unix.GetEnvInt('SHLVL'),
+      'command_no': number,
+      'tty': unix.GetTTY(),
+      'euid': unix.GetEUID(),
+      'cwd': unix.GetCWD(),
+      'rval': rval,
+      'start_time': start,
+      'end_time': finish,
+      'duration': finish - start,
+      'pipe_cnt': len(pipes.split('_')),
+      'pipe_vals': pipes,
+      'command': command
+    }
+    # If the user changed directories, CWD will be the new directory, not the
+    # one where the command was actually entered.
+    if rval == 0 and (command == 'cd' or command.startswith('cd ')):
+      self.values['cwd'] = unix.GetEnv('OLDPWD')
+
+
 def main(argv):
   # If ASH_DISABLED is set, we skip everything and exit without error.
   if os.getenv('ASH_DISABLED'): return 0
@@ -151,12 +267,11 @@ def main(argv):
   if flags.alert:
     print >> sys.stderr, flags.alert
 
-  # TODO(cpa): get the DB filename from config.
+  # Create the session id, if not already set in the environment.
   session_id = os.getenv('ASH_SESSION_ID')
   if flags.get_session_id:
     if session_id is None:
-      print 'Need to insert one and return the new rowid value'
-      # TODO(cpa): try to insert a new session and get the new session ID
+      session_id = Session().Insert()
     print session_id
 
   # Insert a new command into the database, if one was supplied.
@@ -167,13 +282,14 @@ def main(argv):
     or flags.command_finish
     or flags.command_number)
   if command_flag_used:
-    print 'You want to enter a new command into the DB.'
-    # TODO(cpa): insert the command into the database.
+    Command(
+      flags.command, flags.command_exit, flags.command_start,
+      flags.command_finish, flags.command_number, flags.command_pipe_status
+    ).Insert()
 
   # End the current session.
   if flags.end_session:
-    print 'you want to end this session.'
-    # TODO(cpa): execute the 'close session' query
+    Session().Close()
 
   # Return the desired exit code.
   return flags.exit
