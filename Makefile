@@ -15,7 +15,7 @@
 #
 
 REV := $(shell svn up | cut -d' ' -f3 | cut -d. -f1 | sed -e 's:^:.r:' )
-VERSION  := 0.2
+VERSION  := 0.3
 RVERSION := ${VERSION}${REV}
 TMP_ROOT := /tmp
 TMP_DIR  := ${TMP_ROOT}/ash-${VERSION}
@@ -33,11 +33,12 @@ new:	clean all
 version:
 	sed -i -e "/^VERSION :=/s/:= .*/:= ${RVERSION}/" {src,python}/Makefile
 
-build:
+build: version
 	@ printf "\nCompiling source code...\n"
 	@ cd src && make
-	chmod 555 src/_ash_log src/ash_query
-	cp -af src/_ash_log src/ash_query files/usr/local/bin
+	@ cd python && make
+	chmod 555 src/_ash_log src/ash_query python/*.py
+	cp -af src/_ash_log src/ash_query python/*.py files/usr/local/bin
 
 man:
 	@ printf "\nGenerating man pages...\n"
@@ -51,6 +52,7 @@ man:
 	      stat -c %y man/ash_query.1 \
 	        | cut -d' ' -f1 ):" \
 	  | gzip -9 -c > ./files${MAN_DIR}/ash_query.1.gz
+	cp -af ./files${MAN_DIR}/_ash_log.1.gz ./files${MAN_DIR}/_ash_log.py.1.gz
 	chmod 644 ./files${MAN_DIR}/*ash*.1.gz
 
 install: build man uninstall
@@ -67,6 +69,7 @@ uninstall:
 	@ printf "\nUninstalling Advanced Shell History...\n"
 	sudo rm -rf /etc/ash /usr/lib/advanced_shell_history
 	sudo rm -f /usr/local/bin/_ash_log /usr/local/bin/ash_query
+	sudo rm -f /usr/local/bin/_ash_log.py
 	sudo rm -f ${MAN_DIR}/_ash_log.1.gz ${MAN_DIR}/ash_query.1.gz
 	sudo rm -f ${MAN_DIR}/advanced_shell_history
 
@@ -89,6 +92,7 @@ clean:	version
 	@ printf "\nCleaning temp and trash files...\n"
 	cd src && make distclean
 	rm -f files/usr/local/bin/_ash_log
+	rm -f files/usr/local/bin/_ash_log.py
 	rm -f files/usr/local/bin/ash_query
 	rm -f files/usr/share/man/man1/_ash_log.1.gz
 	rm -f files/usr/share/man/man1/ash_query.1.gz

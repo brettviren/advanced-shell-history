@@ -7,7 +7,7 @@ TODO
     ( ) - parse flags (argparse?)
     ( ) - mimic c++ functionality
     ( ) - 
-  [ ] logging application
+  [x] logging application
     (x) - write the command to the DB
     (x) - handle flags
     (x) - investigate the argparse module for python
