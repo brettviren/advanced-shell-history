@@ -17,71 +17,88 @@
 """A helper library to expose Unix system information."""
 
 import os
+import pwd
+import socket
 import sys
 import time
 
 
 def GetCWD():
-  # TODO(cpa): return the current working directory.
-  return 'TODO(cpa): CWD'
+  """Returns the current working directory."""
+  return os.getcwd()
 
 
 def GetEnv(variable):
-  # TODO(cpa): return the environment variable value
-  return None
+  """Returns the environment variable value as a string."""
+  return os.getenv(variable)
+
+
+def GetEnvInt(variable):
+  """Returns the environment variable value as an integer."""
+  return int(os.getenv(variable))
 
 
 def GetEUID():
-  # TODO(cpa): return the EUID of the command
-  return 0
+  """Returns the current effective user ID as an int."""
+  return os.geteuid()
 
 
 def GetHostIp():
-  # TODO(cpa): return the host ips
-  return 'TODO(cpa): host ip'
+  """Returns the ip addresses for this host."""
+  return os.popen('/bin/hostname -I').read().strip()
 
 
 def GetHostName():
-  # TODO(cpa): return the hostname
-  return 'TODO(cpa): hostname'
+  """Returns the hostname."""
+  return socket.gethostname()
 
 
 def GetLoginName():
-  # TODO(cpa): return the user login name
-  return 'TODO(cpa): user login name'
+  """Returns the user login name."""
+  return pwd.getpwuid(os.getuid())[0]
 
 
 def GetPID():
-  # TODO(cpa): return the PID of the command
-  return 0
+  """Returns the PID of the shell."""
+  return os.getppid()
 
 
 def GetPPID():
-  # TODO(cpa): return the PPID of the command
-  return 0
+  """Returns the PPID of the shell."""
+  return _GetProcStat(3)
+
+
+def _GetProcStat(num):
+  """Returns the i'th field of /proc/<pid>/stat of the shell."""
+  with open('/proc/%d/stat' % os.getppid()) as fd:
+    data = fd.read()
+    return data.split(' ', num + 1)[num]
 
 
 def GetShell():
-  # TODO(cpa): return the name of the shell (zsh or bash)
-  return 'TODO(cpa): bash or zsh'
+  """Returns the name of the shell (ie: either zsh or bash)"""
+  return _GetProcStat(1).strip('()')
 
 
 def GetTime():
-  # TODO(cpa): return the epoch time
-  return 0
+  """Returns the epoch timestamp."""
+  return long(time.time())
 
 
 def GetTimeZone():
-  # TODO(cpa): return the local time zone string.
-  return 'GMT'
+  """Returns the local time zone string."""
+  return time.tzname[time.localtime()[8]]
 
 
 def GetTTY():
-  # TODO(cpa): return the name of the current tty
-  return 'TODO(cpa): the shell tty'
+  """Return the name of the current controlling tty."""
+  tty_name = os.ttyname(sys.stdin.fileno())
+  if tty_name and tty_name.startswith('/dev/'):
+    return tty_name[5:]
+  return tty_name
 
 
 def GetUID():
-  # TODO(cpa): return the UID of the command
-  return 0
+  """Returns the UID of the command."""
+  return os.getuid()
 
