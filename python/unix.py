@@ -45,6 +45,7 @@ def GetEUID():
 
 def GetHostIp():
   """Returns the ip addresses for this host."""
+  # TODO(cpa): respect the relevant ASH_CFG_ settings here.
   return os.popen('/bin/hostname -I').read().strip()
 
 

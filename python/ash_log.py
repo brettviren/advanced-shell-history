@@ -126,10 +126,10 @@ def InitLogging():
   Lines are written in roughly this format:
     2012-07-17 23:59:59 PDT: SESSION 123: DEBUG: argv = "[0]='ls'"
   """
+  session_id = os.getenv('ASH_SESSION_ID') or 'NEW'
   config = Config()
-  level = config.GetString('LOG_LEVEL')
+  level = config.GetString('LOG_LEVEL') or 'INFO'
   level = hasattr(logging, level) and getattr(logging, level) or logging.DEBUG
-  session_id = os.getenv('ASH_SESSION_ID')
   format = '%(asctime)sSESSION ' + session_id + ': %(levelname)s: %(message)s'
   kwargs = {
     'datefmt': config.GetString('LOG_DATE_FMT'),
@@ -156,13 +156,19 @@ class Database(object):
           and name = ?;
       '''
       # Check that the table exists, creating it if not.
-      with Database().cursor as cur:
+      db = Database()
+      cur = db.cursor
+      try:
         cur.execute(sql, (table_name,))
         rs = cur.fetchone()
         if not rs:
-          cur.execute(self.GetCreateTableSql())
-        elif rs[0] != self.GetCreateTableSql():
-          logging.warning('Table %s exists, but has an unexpected schema.' % table_name)
+          cur.execute(self.GetCreateTableSql() + ';')
+          db.connection.commit()
+        elif rs[0] != self.GetCreateTableSql().strip():
+          logging.warning('Table %s exists, but has an unexpected schema.',
+                          table_name)
+      finally:
+        cur.close()
 
     def Insert(self):
       """Insert the object into the database, returning the new rowid."""
@@ -171,18 +177,24 @@ class Database(object):
         ', '.join(self.values),
         ', '.join(['?' for _ in self.values])
       )
-      with Database().cursor as cur:
-        cur.execute(sql, tuple(self.values.values()))
-        return cur.lastrowid
-      return 0
+      return Database().Execute(sql, tuple(self.values.values()))
 
   def __init__(self):
     """Initialize a Database with an open connection to the history database."""
-    db_filename = Config().GetString('HISTORY_DB')
-    # TODO(cpa): test that the file exists and is readable.
-    # TODO(cpa): create the database if it does not exist yet.
-    self.connection = sqlite3.connect(db_filename)
+    self.connection = sqlite3.connect(Config().GetString('HISTORY_DB'))
     self.cursor = self.connection.cursor()
+
+  def Execute(self, sql, values):
+    try:
+      self.cursor.execute(sql, values)
+      logging.debug('executing query: %s, values = %r', sql, values)
+      return self.cursor.lastrowid
+    except sqlite3.IntegrityError as e:
+      logging.debug('constraint violation: %r', e)
+    finally:
+      self.connection.commit()
+      self.cursor.close()
+    return 0
 
 
 class Session(Database.Object):
@@ -201,13 +213,36 @@ class Session(Database.Object):
       'euid': unix.GetEUID(),
       'logname': unix.GetLoginName(),
       'hostname': unix.GetHostName(),
-      'host_ip': unix.GetHostIP(),
+      'host_ip': unix.GetHostIp(),
       'shell': unix.GetShell(),
       'sudo_user': unix.GetEnv('SUDO_USER'),
       'sudo_uid': unix.GetEnv('SUDO_UID'),
       'ssh_client': unix.GetEnv('SSH_CLIENT'),
       'ssh_connection': unix.GetEnv('SSH_CONNECTION')
     }
+
+  def GetCreateTableSql(self):
+    return '''
+CREATE TABLE sessions ( 
+  id integer primary key autoincrement, 
+  hostname varchar(128), 
+  host_ip varchar(40), 
+  ppid int(5) not null, 
+  pid int(5) not null, 
+  time_zone str(3) not null, 
+  start_time integer not null, 
+  end_time integer, 
+  duration integer, 
+  tty varchar(20) not null, 
+  uid int(16) not null, 
+  euid int(16) not null, 
+  logname varchar(48), 
+  shell varchar(50) not null, 
+  sudo_user varchar(48), 
+  sudo_uid int(16), 
+  ssh_client varchar(60), 
+  ssh_connection varchar(100) 
+)'''
 
   def Close(self):
     """Closes this session in the database."""
@@ -218,9 +253,8 @@ class Session(Database.Object):
         duration = ? - start_time
       WHERE id == ?;
     '''
-    with Database().cursor as cur:
-      ts = unix.GetTime()
-      cur.execute(sql, (ts, ts, unix.GetEnvInt('ASH_SESSION_ID'),))
+    ts = unix.GetTime()
+    Database().Execute(sql, (ts, ts, unix.GetEnvInt('ASH_SESSION_ID'),))
 
 
 class Command(Database.Object):
@@ -246,6 +280,26 @@ class Command(Database.Object):
     # one where the command was actually entered.
     if rval == 0 and (command == 'cd' or command.startswith('cd ')):
       self.values['cwd'] = unix.GetEnv('OLDPWD')
+
+  def GetCreateTableSql(self):
+    return '''
+CREATE TABLE commands (
+  id integer primary key autoincrement,
+  session_id integer not null,
+  shell_level integer not null,
+  command_no integer,
+  tty varchar(20) not null,
+  euid int(16) not null,
+  cwd varchar(256) not null,
+  rval int(5) not null,
+  start_time integer not null,
+  end_time integer not null,
+  duration integer not null,
+  pipe_cnt int(3),
+  pipe_vals varchar(80),
+  command varchar(1000) not null,
+UNIQUE(session_id, command_no)
+)'''
 
 
 def main(argv):
