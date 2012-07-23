@@ -28,6 +28,8 @@
 set -e
 set -u
 
+PYTHON_BIN="/usr/bin/python"
+
 
 ##
 # Logs a message and quits.
@@ -88,6 +90,25 @@ function get_argparse() {
 
   fetch "${ARGPARSE_URL}" "${ARGPARSE_ZIP}"
 }
+
+
+# Make sure we already have Python.
+if [ ! -e "${PYTHON_BIN}" ]; then
+  echo "Expected to find a python binary at: ${PYTHON_BIN}"
+  exit 1
+fi
+
+
+# If python 2.7 or above is installed, do nothing - argparse is included.
+python_version="$( "${PYTHON_BIN}" --version 2>&1 )"
+max_python_version="$( echo -e "${python_version}\nPython 2.7" \
+  | sort --version-sort \
+  | tail -n1
+)"
+if [[ "$python_version" == "$max_python_version" ]]; then
+  echo "Argparse is already built-in to Python 2.7 and later.  Exiting."
+  exit 0
+fi
 
 # Download the tarball, if necessary.
 if [ -e argparse-*.tar.gz ]; then
