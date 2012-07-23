@@ -23,14 +23,14 @@ user-generated queries.
 __author__ = 'Carl Anderson (carl.anderson@gmail.com)'
 
 # NOTE: This variable is set automatically by the Makefile.
-__version__ = '0.3.r125'
+__version__ = '0.3.r126'
 
 
 import os
 import sys
 
 # Allow the local advanced_shell_history library to be imported.
-_LIB = '/usr/local/lib/advanced_shell_history'
+_LIB = '/usr/local/lib'
 if _LIB not in sys.path:
   sys.path.append(_LIB)
 

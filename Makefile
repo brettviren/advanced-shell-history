@@ -40,6 +40,7 @@ build: version
 	chmod 555 src/_ash_log src/ash_query python/*.py python/advanced_shell_history/*.py
 	cp -af src/_ash_log src/ash_query python/*.py files/usr/local/bin
 	cp -af python/advanced_shell_history/*.py files/usr/local/lib/advanced_shell_history/
+	chmod 775 python/*.py python/*/*.py
 
 man:
 	@ printf "\nGenerating man pages...\n"

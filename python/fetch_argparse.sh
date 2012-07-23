@@ -126,7 +126,7 @@ if ! tar -xvzpf "${ARGPARSE_ZIP}"; then
   exit 1
 fi
 
-mv -f "${ARGPARSE_DIR}"/argparse.py .
+mv -f "${ARGPARSE_DIR}"/argparse.py advanced_shell_history/
 
 # Clean up.
 rm -rf "${ARGPARSE_DIR}" "${ARGPARSE_ZIP}"
