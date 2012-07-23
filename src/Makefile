@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-VERSION := 0.3.r118
+VERSION := 0.3.r125
 LOGGER	:= _ash_log
 QUERIER	:= ash_query
 EXES	:= ${LOGGER} ${QUERIER}
@@ -25,7 +25,8 @@ CPPS	:= $(shell ls *.cpp)
 TRASH	:= ${OBJS} ${EXES} core
 CPP	:= g++
 C	:= gcc
-FLAGS	:= -g -Wall -DASH_VERSION="\"${VERSION}\"" -ansi -pedantic -O2
+FLAGS	:= -g -Wall -DASH_VERSION="\"${VERSION}\"" -ansi -pedantic
+#FLAGS	:= -g -Wall -DASH_VERSION="\"${VERSION}\"" -ansi -pedantic -O2
 RT_LIB	:= -lrt
 
 .PHONY:	all clean distclean new reallyclean
@@ -99,6 +100,7 @@ command.o: command.hpp unix.hpp util.hpp
 config.o: config.hpp
 database.o: database.hpp config.hpp logger.hpp sqlite3.h
 flags.o: flags.hpp
+foo.o: flags.hpp
 formatter.o: formatter.hpp database.hpp logger.hpp
 logger.o: logger.hpp config.hpp
 queries.o: queries.hpp logger.hpp

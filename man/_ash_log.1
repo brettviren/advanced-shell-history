@@ -26,7 +26,7 @@ _ash_log - The advanced shell history command logger.
 
 .SH SYNOPSIS
 Usage: _ash_log [options]
-      --help
+  -h  --help
   -a  --alert VALUE
   -c  --command VALUE
   -e  --command_exit VALUE
@@ -41,9 +41,10 @@ Usage: _ash_log [options]
 
 
 .SH DESCRIPTION
-.B _ash_log is not intended to be executed manually.
-It is invoked automatically by the advanced shell history system which is 
-only activated by sourcing the appropriate file.
+.B _ash_log and _ash_log.py are not intended to be executed manually.
+They are invoked automatically by the advanced shell history system which is 
+only activated by sourcing the appropriate file (depending on whether you are
+using bash or zsh).
 
 Advanced Shell History includes:
 .RS
@@ -84,13 +85,13 @@ source /usr/lib/advanced_shell_history/zsh
 
 
 .SH OPTIONS
-.IP "      --help"
+.IP "  -h  --help"
 
 Display command help and exit 0.
 
 .IP "  -a  --alert VALUE"
 
-Display an alert message (VALUE) and exit 0.
+Display an alert message (VALUE).
 
 .IP "  -c  --command VALUE"
 
@@ -227,6 +228,10 @@ Skip logging IP addresses for loopback devices (both ipv4 and ipv6).
 
 .IP ASH_DISABLED
 If set, _ash_log is disabled.
+
+.IP ASH_LOG_BIN
+The binary used to log command history to the database.  This should be either
+_ash_log or _ash_log.py, depending on your system setup.
 
 .IP ASH_SESSION_ID
 The session id number created for the current session.  If unset, a new

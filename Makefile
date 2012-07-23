@@ -31,14 +31,15 @@ all:	version build man
 new:	clean all
 
 version:
-	sed -i -e "/^VERSION :=/s/:= .*/:= ${RVERSION}/" {src,python}/Makefile
+	sed -i -e "/^VERSION :=/s/:= .*/:= ${RVERSION}/" python/Makefile src/Makefile
 
 build: version
 	@ printf "\nCompiling source code...\n"
 	@ cd src && make
 	@ cd python && make
-	chmod 555 src/_ash_log src/ash_query python/*.py
+	chmod 555 src/_ash_log src/ash_query python/*.py python/advanced_shell_history/*.py
 	cp -af src/_ash_log src/ash_query python/*.py files/usr/local/bin
+	cp -af python/advanced_shell_history/*.py files/usr/local/lib/advanced_shell_history/
 
 man:
 	@ printf "\nGenerating man pages...\n"
