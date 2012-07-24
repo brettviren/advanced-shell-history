@@ -23,12 +23,13 @@ logging, flag parsing, configuration and database management.
 __author__ = 'Carl Anderson (carl.anderson@gmail.com)'
 
 # NOTE: This variable is set automatically by the Makefile.
-__version__ = '0.3.r126'
+__version__ = '0.3.r127'
 
 
 import argparse
 import logging
 import os
+import sqlite3
 
 
 class Flags(argparse.ArgumentParser):
@@ -41,24 +42,29 @@ class Flags(argparse.ArgumentParser):
 
   def __init__(self, arguments=None, flags=None):
     """Initialize the Flags."""
-    argparse.ArgumentParser.__init__(self, formatter_class=Flags.Formatter)
+    parser = argparse.ArgumentParser(formatter_class=Flags.Formatter)
 
     # Add the standard argument-taking flags.
     for short_flag, long_flag, metavar, arg_type, help_text in arguments or []:
-      self.add_argument('-' + short_flag, '--' + long_flag, metavar=metavar,
-                        type=arg_type, help=help_text)
+      parser.add_argument('-' + short_flag, '--' + long_flag, metavar=metavar,
+                          type=arg_type, help=help_text)
 
     # Add the standard no-argument-taking flags.
     for short_flag, long_flag, help_text in flags or []:
-      self.add_argument('-' + short_flag, '--' + long_flag, action='store_true',
-                        help=help_text)
+      parser.add_argument('-' + short_flag, '--' + long_flag,
+                          action='store_true', help=help_text)
 
     # Add a flag to display the version and exit.
-    self.add_argument('-V', '--version', action='version', version=__version__,
-                      help='prints the version and exits')
+    parser.add_argument('-V', '--version', action='version', version=__version__,
+                        help='prints the version and exits')
 
-    self.flags = self.parse_args().__dict__
+    self._parser = parser
+    self.flags = parser.parse_args().__dict__
     self.__dict__.update(self.flags)
+
+  def PrintHelp(self):
+    """Prints the help menu."""
+    self._parser.print_help()
 
 
 class Config(object):
@@ -118,4 +124,66 @@ def InitLogging():
     'level': level,
   }
   logging.basicConfig(**kwargs)
+
+
+class Database(object):
+  """A wrapper around a database connection."""
+
+  # The name of the sqlite3 file backing the saved command history.
+  filename = None
+
+  class Object(object):
+    """A construct for objects to be inserted into the Database."""
+    def __init__(self, table_name):
+      self.values = {}
+      self.table_name = table_name
+      sql = '''
+        select sql
+        from sqlite_master
+        where
+          type = 'table'
+          and name = ?;
+      '''
+      # Check that the table exists, creating it if not.
+      db = Database()
+      cur = db.cursor
+      try:
+        cur.execute(sql, (table_name,))
+        rs = cur.fetchone()
+        if not rs:
+          cur.execute(self.GetCreateTableSql() + ';')
+          db.connection.commit()
+        elif rs[0] != self.GetCreateTableSql().strip():
+          logging.warning('Table %s exists, but has an unexpected schema.',
+                          table_name)
+      finally:
+        cur.close()
+
+    def Insert(self):
+      """Insert the object into the database, returning the new rowid."""
+      sql = 'INSERT INTO %s ( %s ) VALUES ( %s )' % (
+        self.table_name,
+        ', '.join(self.values),
+        ', '.join(['?' for _ in self.values])
+      )
+      return Database().Execute(sql, tuple(self.values.values()))
+
+  def __init__(self):
+    """Initialize a Database with an open connection to the history database."""
+    if Database.filename is None:
+      Database.filename = Config().GetString('HISTORY_DB')
+    self.connection = sqlite3.connect(Database.filename)
+    self.cursor = self.connection.cursor()
+
+  def Execute(self, sql, values):
+    try:
+      self.cursor.execute(sql, values)
+      logging.debug('executing query: %s, values = %r', sql, values)
+      return self.cursor.lastrowid
+    except sqlite3.IntegrityError as e:
+      logging.debug('constraint violation: %r', e)
+    finally:
+      self.connection.commit()
+      self.cursor.close()
+    return 0
 

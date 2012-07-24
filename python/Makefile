@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-VERSION := 0.3.r126
+VERSION := 0.3.r127
 VERSIONED := _ash_log.py advanced_shell_history/*.py ash_query.py
 ARGPARSE := advanced_shell_history/argparse.py
 

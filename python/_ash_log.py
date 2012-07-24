@@ -23,12 +23,11 @@ system-specific metadata.
 __author__ = 'Carl Anderson (carl.anderson@gmail.com)'
 
 # NOTE: This variable is set automatically by the Makefile.
-__version__ = '0.3.r126'
+__version__ = '0.3.r127'
 
 
 import logging
 import os
-import sqlite3
 import sys
 
 # Allow the local advanced_shell_history library to be imported.
@@ -41,6 +40,8 @@ from advanced_shell_history import unix
 
 
 class Flags(util.Flags):
+  """The flags needed for the _ash_log.py script to work."""
+
   arguments = (
     ('a', 'alert', 'MSG', str, 'a message to display to the user'),
     ('c', 'command', 'CMD', str, 'a command to log'),
@@ -61,72 +62,12 @@ class Flags(util.Flags):
     util.Flags.__init__(self, Flags.arguments, Flags.flags)
 
 
-Config = util.Config
-
-        
-class Database(object):
-  """A wrapper around a database connection."""
-
-  class Object(object):
-    """A construct for objects to be inserted into the Database."""
-    def __init__(self, table_name):
-      self.values = {}
-      self.table_name = table_name
-      sql = '''
-        select sql
-        from sqlite_master
-        where
-          type = 'table'
-          and name = ?;
-      '''
-      # Check that the table exists, creating it if not.
-      db = Database()
-      cur = db.cursor
-      try:
-        cur.execute(sql, (table_name,))
-        rs = cur.fetchone()
-        if not rs:
-          cur.execute(self.GetCreateTableSql() + ';')
-          db.connection.commit()
-        elif rs[0] != self.GetCreateTableSql().strip():
-          logging.warning('Table %s exists, but has an unexpected schema.',
-                          table_name)
-      finally:
-        cur.close()
-
-    def Insert(self):
-      """Insert the object into the database, returning the new rowid."""
-      sql = 'INSERT INTO %s ( %s ) VALUES ( %s )' % (
-        self.table_name,
-        ', '.join(self.values),
-        ', '.join(['?' for _ in self.values])
-      )
-      return Database().Execute(sql, tuple(self.values.values()))
-
-  def __init__(self):
-    """Initialize a Database with an open connection to the history database."""
-    self.connection = sqlite3.connect(Config().GetString('HISTORY_DB'))
-    self.cursor = self.connection.cursor()
-
-  def Execute(self, sql, values):
-    try:
-      self.cursor.execute(sql, values)
-      logging.debug('executing query: %s, values = %r', sql, values)
-      return self.cursor.lastrowid
-    except sqlite3.IntegrityError as e:
-      logging.debug('constraint violation: %r', e)
-    finally:
-      self.connection.commit()
-      self.cursor.close()
-    return 0
-
-
-class Session(Database.Object):
+class Session(util.Database.Object):
   """An abstraction of a shell session to store to the history database."""
 
   def __init__(self):
     """Initialize a Session, populating session values."""
-    Database.Object.__init__(self, 'sessions')
+    util.Database.Object.__init__(self, 'sessions')
     self.values = {
       'time_zone': unix.GetTimeZone(),
       'start_time': unix.GetTime(),
@@ -178,13 +119,13 @@ CREATE TABLE sessions (
       WHERE id == ?;
     '''
     ts = unix.GetTime()
-    Database().Execute(sql, (ts, ts, unix.GetEnvInt('ASH_SESSION_ID'),))
+    util.Database().Execute(sql, (ts, ts, unix.GetEnvInt('ASH_SESSION_ID'),))
 
 
-class Command(Database.Object):
+class Command(util.Database.Object):
   """An abstraction of a command to store to the history database."""
   def __init__(self, command, rval, start, finish, number, pipes):
-    Database.Object.__init__(self, 'commands')
+    util.Database.Object.__init__(self, 'commands')
     self.values = {
       'session_id': unix.GetEnvInt('ASH_SESSION_ID'),
       'shell_level': unix.GetEnvInt('SHLVL'),
@@ -246,8 +187,8 @@ def main(argv):
     print >> sys.stderr, flags.alert
 
   # If no arguments were given, it may be best to show --help.
-  if len(argv) == 1 and not Config().GetBool('HIDE_USAGE_FOR_NO_ARGS'):
-    flags.print_help()
+  if len(argv) == 1 and not util.Config().GetBool('HIDE_USAGE_FOR_NO_ARGS'):
+    flags.PrintHelp()
 
   # Create the session id, if not already set in the environment.
   session_id = os.getenv('ASH_SESSION_ID')
