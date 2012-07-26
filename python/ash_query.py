@@ -29,6 +29,7 @@ __version__ = '0.3.r127'
 
 
 import os
+import re
 import sys
 
 # Allow the local advanced_shell_history library to be imported.
@@ -65,10 +66,25 @@ class Queries(object):
 
   queries = []
   show_headings = True
+  parser = re.compile(r"""
+    \s*(?P<query_name>[A-Za-z0-9_-]+)\s*:\s*{\s*
+      description\s*:\s*
+        (?P<description>
+          "([^"]|\\")*"      # A double-quoted string.
+        )\s*
+      sql\s*:\s*{
+        (?P<sql>
+          (
+            [$]{[^}]*}     | # Shell variable expressions: ${FOO} or ${BAR:-0}
+            [^}]             # Everything else in the query.
+          )*
+        )
+      }\s*
+    }""", re.VERBOSE)
 
   @classmethod
   def Init(cls):
-    if Queries.queries: return
+    if cls.queries: return
 
     # Load the queries from /etc/ash/queries and ~/.ash/queries
     data = []
@@ -77,12 +93,12 @@ class Queries(object):
       lines = [x for x in open(filename).readlines() if x and x[0] != '#']
       data.extend([x[:-1] for x in lines if x[:-1]])
 
-    queries = {}  # {name: (description, sql)}
-    # TODO(cpa): parse the loaded config files
-
-    # Append each query to a list in sorted order.
-    for query in sorted(queries.items()):
-      cls.queries.append((query))
+    # Parse the loaded config files.
+    cls.queries = {}  # {name: (description, sql)}
+    for match in cls.parser.finditer('\n'.join(data)):
+      query_name = match.group('query_name')
+      description = match.group('description') or '""'
+      cls.queries[query_name] = (description[1:-1], match.group('sql'))
 
   @classmethod
   def Get(cls, query_name):
@@ -92,9 +108,13 @@ class Queries(object):
   @classmethod
   def PrintQueries(cls):
     if not cls.queries: return
+    # Append each query to a list in sorted order.
+    queries = []
+    for query in sorted(cls.queries.items()):
+      queries.append((query))
     if cls.show_headings:
       print 'query', 'description'
-    for query, description, _ in Queries.queries:
+    for query, (description, _) in queries:
       print query, description
 
 

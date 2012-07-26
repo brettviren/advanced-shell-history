@@ -93,9 +93,13 @@ mrproper: clean
 clean:	version
 	@ printf "\nCleaning temp and trash files...\n"
 	cd src && make distclean
-	rm -f files/usr/local/bin/_ash_log
-	rm -f files/usr/local/bin/_ash_log.py
-	rm -f files/usr/local/bin/ash_query
+	rm -f files/usr/local/bin/_ash_log*
+	rm -f files/usr/local/bin/ash_query*
+	rm -f files/usr/local/lib/advanced_shell_history/util.py
+	rm -f files/usr/local/lib/advanced_shell_history/__init__.py
+	rm -f files/usr/local/lib/advanced_shell_history/unix.py
+	rm -f files/usr/local/lib/advanced_shell_history/argparse.py
+	rm -f files/usr/share/man/man1/_ash_log.py.1.gz
 	rm -f files/usr/share/man/man1/_ash_log.1.gz
 	rm -f files/usr/share/man/man1/ash_query.1.gz
 	rm -rf ${TMP_DIR} ${TMP_FILE}
