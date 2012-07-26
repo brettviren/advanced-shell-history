@@ -25,7 +25,7 @@ TOOD(cpa): add logging to this at some point.
 __author__ = 'Carl Anderson (carl.anderson@gmail.com)'
 
 # NOTE: This variable is set automatically by the Makefile.
-__version__ = '0.3.r129'
+__version__ = '0.3.r130'
 
 
 import os
@@ -130,8 +130,10 @@ class Queries(object):
 
   @classmethod
   def Get(cls, query_name):
-    if not query_name or not query_name in cls.queries: return None
-    return cls.queries[query_name][1]
+    if not query_name or not query_name in cls.queries: return (None, None)
+    raw = cls.queries[query_name][1]
+    sql = os.popen('/bin/cat <<EOF_ASH_SQL\n%s\nEOF_ASH_SQL' % raw).read()
+    return (raw, sql)
 
   @classmethod
   def PrintQueries(cls):
@@ -191,15 +193,18 @@ def main(argv):
     Queries.PrintQueries()
 
   elif flags.print_query:
-    query = Queries.Get(flags.print_query)
-    if not query:
+    raw, sql = Queries.Get(flags.print_query)
+    if not raw:
       print >> sys.stderr, 'Query not found: %s' % flags.print_query
       return 1
-    print 'Query: %s\nTemplate Form:\n%s\nActual SQL:\n%s' % (
-        flags.print_query, query, query)
+    if raw.strip() != sql.strip():
+      print 'Query: %s\nTemplate Form:\n%s\nActual SQL:\n%s' % (
+          flags.print_query, raw, sql)
+    else:
+      print 'Query: %s\n%s' % (flags.print_query, sql)
 
   elif flags.query:
-    query = Queries.Get(flags.query)
+    sql = Queries.Get(flags.query)[1]
     # TODO(cpa): get the query to execute and execute it
     # TODO(cpa): pass the result set to the formatter
     print 'you want to execute query named: %s' % flags.query
