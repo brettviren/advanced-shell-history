@@ -25,7 +25,7 @@ TOOD(cpa): add logging to this at some point.
 __author__ = 'Carl Anderson (carl.anderson@gmail.com)'
 
 # NOTE: This variable is set automatically by the Makefile.
-__version__ = '0.3.r127'
+__version__ = '0.3.r129'
 
 
 import os
@@ -59,6 +59,34 @@ class Flags(util.Flags):
   def __init__(self):
     """Initialize the Flags."""
     util.Flags.__init__(self, Flags.arguments, Flags.flags)
+
+
+def _Display(rows, headings=None):
+  # Find the expected number of columns per each row.
+  columns = len(headings or (rows and rows[0]))
+
+  # Find the maximum widths of each column.
+  widths = [len(x) for x in headings or (rows and rows[0])]
+  for row in rows:
+    # Sanity check.
+    if len(row) != columns:
+      print >> sys.stderr, 'One row in the set has the wrong column count.'
+      sys.exit(1)
+
+    i = 0
+    for column in row:
+      widths[i] = max(widths[i], len(column))
+      i += 1
+
+  # Create a printf-style format string to print the rows.
+  separator = '    '
+  fmt = separator.join(['%%%ds' % -width for width in widths])
+
+  # Print the rows and headings.
+  if headings:
+    print fmt % tuple(headings)
+  for row in rows:
+    print fmt % tuple(row)
 
 
 class Queries(object):
@@ -102,20 +130,14 @@ class Queries(object):
 
   @classmethod
   def Get(cls, query_name):
-    queries = [x for x in cls.queries if x[0] == query_name]
-    return queries and queries[0] or None
+    if not query_name or not query_name in cls.queries: return None
+    return cls.queries[query_name][1]
 
   @classmethod
   def PrintQueries(cls):
-    if not cls.queries: return
-    # Append each query to a list in sorted order.
-    queries = []
-    for query in sorted(cls.queries.items()):
-      queries.append((query))
-    if cls.show_headings:
-      print 'query', 'description'
-    for query, (description, _) in queries:
-      print query, description
+    headings = cls.show_headings and ['Query', 'Description'] or None
+    data = sorted([(query, desc) for query, (desc, _) in cls.queries.items()])
+    _Display(data, headings)
 
 
 class Formatter(object):
@@ -130,11 +152,9 @@ class Formatter(object):
 
   @classmethod
   def PrintTypes(cls):
-    if not cls.formatters: return
-    if cls.show_headings:
-      print 'Format', 'Description'
-    for formatter, description in [(x.name, x.desc) for x in cls.formatters]:
-      print formatter, description
+    headings = cls.show_headings and ['Format', 'Description'] or None
+    data = sorted([(x.name, x.desc) for x in cls.formatters])
+    _Display(data, headings)
 
 
 def InitFormatters():
@@ -175,7 +195,8 @@ def main(argv):
     if not query:
       print >> sys.stderr, 'Query not found: %s' % flags.print_query
       return 1
-    print query[2]
+    print 'Query: %s\nTemplate Form:\n%s\nActual SQL:\n%s' % (
+        flags.print_query, query, query)
 
   elif flags.query:
     query = Queries.Get(flags.query)
