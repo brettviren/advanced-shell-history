@@ -4,7 +4,7 @@ TODO
     ( ) - time the DB writes and timeout if over the threshold
     ( ) - 
   [ ] querying application
-    ( ) - parse flags (argparse?)
+    (x) - parse flags (argparse?)
     ( ) - mimic c++ functionality
     ( ) - 
   [x] logging application

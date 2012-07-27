@@ -25,7 +25,7 @@ TOOD(cpa): add logging to this at some point.
 __author__ = 'Carl Anderson (carl.anderson@gmail.com)'
 
 # NOTE: This variable is set automatically by the Makefile.
-__version__ = '0.3.r130'
+__version__ = '0.3.r131'
 
 
 import os
@@ -61,36 +61,14 @@ class Flags(util.Flags):
     util.Flags.__init__(self, Flags.arguments, Flags.flags)
 
 
-def _Display(rows, headings=None):
-  # Find the expected number of columns per each row.
-  columns = len(headings or (rows and rows[0]))
-
-  # Find the maximum widths of each column.
-  widths = [len(x) for x in headings or (rows and rows[0])]
-  for row in rows:
-    # Sanity check.
-    if len(row) != columns:
-      print >> sys.stderr, 'One row in the set has the wrong column count.'
-      sys.exit(1)
-
-    i = 0
-    for column in row:
-      widths[i] = max(widths[i], len(column))
-      i += 1
-
-  # Create a printf-style format string to print the rows.
-  separator = '    '
-  fmt = separator.join(['%%%ds' % -width for width in widths])
-
-  # Print the rows and headings.
-  if headings:
-    print fmt % tuple(headings)
-  for row in rows:
-    print fmt % tuple(row)
-
-
 class Queries(object):
-  """A class to store all the queries available to ash_query.py."""
+  """A class to store all the queries available to ash_query.py.
+
+  Queries are parsed from /etc/ash/queries and ~/.ash/queries and made available
+  to the command line utility.
+
+  TODO(cpa): if there is an error in the file, something should be printed.
+  """
 
   queries = []
   show_headings = True
@@ -137,9 +115,9 @@ class Queries(object):
 
   @classmethod
   def PrintQueries(cls):
-    headings = cls.show_headings and ['Query', 'Description'] or None
     data = sorted([(query, desc) for query, (desc, _) in cls.queries.items()])
-    _Display(data, headings)
+    data.insert(0, ['Query', 'Description'])
+    AlignedFormatter.PrintRows(data)
 
 
 class Formatter(object):
@@ -154,14 +132,72 @@ class Formatter(object):
 
   @classmethod
   def PrintTypes(cls):
-    headings = cls.show_headings and ['Format', 'Description'] or None
     data = sorted([(x.name, x.desc) for x in cls.formatters])
-    _Display(data, headings)
+    data.insert(0, ['Format', 'Description'])
+    AlignedFormatter.PrintRows(data)
+
+  @classmethod
+  def Get(cls, name):
+    for fmt in cls.formatters:
+      if fmt.name == name:
+        return fmt
+    return None
+
+  def Print(self, rs):
+    """Print the result set."""
+    raise NotImplemented
+
+
+class AlignedFormatter(Formatter):
+  @classmethod
+  def PrintRows(cls, rows):
+    headings = rows[0]
+    widths = [0 for _ in headings]
+    separator = '    '
+    XX = len(separator)
+    max_column_width = 80
+
+    # Skip the headings row, if that flag was specified.
+    if not Formatter.show_headings:
+      rows = rows[1:]
+
+    # Calculate the min widths of each column.
+    for row in rows:
+      i = 0
+      for col in row:
+        if col:
+          widths[i]= max(widths[i], min(max_column_width, len(str(col))))
+        i += 1
+
+    # Print the result set rows aligned.
+    fmt = separator.join(['%%%ds' % -width for width in widths])
+    for row in rows:
+      print fmt % tuple(row)
+  
+  def Print(self, rs):
+    AlignedFormatter.PrintRows(rs)
+
+
+class AutoFormatter(Formatter):
+  def Print(self, rs):
+    print 'TODO(cpa): print these results auto-grouped'
+
+
+class CSVFormatter(Formatter):
+  def Print(self, rs):
+    print 'TODO(cpa): print these results csv separated'
+
+
+class NullFormatter(Formatter):
+  def Print(self, rs):
+    print 'TODO(cpa): print these results null separated'
 
 
 def InitFormatters():
-  # TODO(cpa): create an instance of each type of formatter
-  pass
+  AlignedFormatter('aligned', 'Columns are aligned and separated with spaces.')
+  AutoFormatter('auto', 'TODO(cpa): Automatically group redundant values.')
+  CSVFormatter('csv', 'TODO(cpa): Columns are comma separated with strings quoted.')
+  NullFormatter('null', 'TODO(cpa): Columns are null separated with strings quoted.')
 
 
 def main(argv):
@@ -204,10 +240,17 @@ def main(argv):
       print 'Query: %s\n%s' % (flags.print_query, sql)
 
   elif flags.query:
+    # Get the formatter to be used to print the result set.
+    default = util.Config().GetString('DEFAULT_FORMAT') or 'aligned'
+    format_name = flags.format or default
+    fmt = Formatter.Get(format_name)
+    if not fmt:
+      print >> sys.stderr, 'Unknown format: %s' % format_name
+      return 1
+
     sql = Queries.Get(flags.query)[1]
-    # TODO(cpa): get the query to execute and execute it
-    # TODO(cpa): pass the result set to the formatter
-    print 'you want to execute query named: %s' % flags.query
+    rs = util.Database().Fetch(sql)
+    fmt.Print(rs)
 
   return 0
 

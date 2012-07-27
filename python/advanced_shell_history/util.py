@@ -23,7 +23,7 @@ logging, flag parsing, configuration and database management.
 __author__ = 'Carl Anderson (carl.anderson@gmail.com)'
 
 # NOTE: This variable is set automatically by the Makefile.
-__version__ = '0.3.r130'
+__version__ = '0.3.r131'
 
 
 import argparse
@@ -173,6 +173,7 @@ class Database(object):
     if Database.filename is None:
       Database.filename = Config().GetString('HISTORY_DB')
     self.connection = sqlite3.connect(Database.filename)
+    self.connection.row_factory = sqlite3.Row
     self.cursor = self.connection.cursor()
 
   def Execute(self, sql, values):
@@ -187,3 +188,24 @@ class Database(object):
       self.cursor.close()
     return 0
 
+  @classmethod
+  def SanityCheck(cls, sql):
+    return sql and sqlite3.complete_statement(sql)
+
+  def Fetch(self, sql, params=()):
+    """Execute a select query and return the result set."""
+    if self.SanityCheck(sql):
+      try:
+        self.cursor.execute(sql, params)
+        row = self.cursor.fetchone()
+        headings = tuple(row.keys())
+        rows = self.cursor.fetchall()
+        rows.insert(0, headings)
+        rows.insert(1, row)
+        return rows
+      except sqlite3.Error as e:
+        print >> sys.stderr, 'Failed to execute query: %s (%s)' % (sql, params)
+        return None
+      finally:
+        self.cursor.close()
+        self.cursor = None
