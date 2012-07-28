@@ -3,9 +3,9 @@ TODO
     (x) - open or create the database defined in the environment
     ( ) - time the DB writes and timeout if over the threshold
     ( ) - 
-  [ ] querying application
+  [x] querying application
     (x) - parse flags (argparse?)
-    ( ) - mimic c++ functionality
+    (x) - mimic c++ functionality
     ( ) - 
   [x] logging application
     (x) - write the command to the DB

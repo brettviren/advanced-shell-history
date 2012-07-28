@@ -4,10 +4,11 @@ Partly because it's easier:
   - there is a native Python flag parsing library in 2.7+ (argparse)
   - Python comes integrated with sqlite3
   - Python comes with a logging library.
+  - The python array operations make lots of parts of the code simpler.
 
 I wrote the initial version in C++ for performance reasons, but am finding that
 there are unforseen compilation issues with it.  Some architectures do not
-support the realtime clock that I'm using - there is a new version of the STL
+support the realtime clock that I'm using and there is a new version of the STL
 library that segfaults when I try to use it.
 
 Also, on most systems, calling Python once per command is not a terrible price

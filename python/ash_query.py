@@ -25,9 +25,10 @@ TOOD(cpa): add logging to this at some point.
 __author__ = 'Carl Anderson (carl.anderson@gmail.com)'
 
 # NOTE: This variable is set automatically by the Makefile.
-__version__ = '0.3.r131'
+__version__ = '0.3.r132'
 
 
+import csv
 import os
 import re
 import sys
@@ -69,7 +70,6 @@ class Queries(object):
 
   TODO(cpa): if there is an error in the file, something should be printed.
   """
-
   queries = []
   show_headings = True
   parser = re.compile(r"""
@@ -123,6 +123,7 @@ class Queries(object):
 class Formatter(object):
   """A base class for an object that formats query results into a stream."""
   formatters = []
+  separator = '   '
   show_headings = True
 
   def __init__(self, name, desc):
@@ -143,22 +144,12 @@ class Formatter(object):
         return fmt
     return None
 
-  def Print(self, rs):
-    """Print the result set."""
-    raise NotImplemented
-
-
-class AlignedFormatter(Formatter):
   @classmethod
-  def PrintRows(cls, rows):
-    headings = rows[0]
-    widths = [0 for _ in headings]
-    separator = '    '
-    XX = len(separator)
-    max_column_width = 80
-
+  def GetWidths(cls, rows):
+    widths = [0 for _ in rows[0]]
+    max_column_width = 80  # TODO(cpa): make this configurable.
     # Skip the headings row, if that flag was specified.
-    if not Formatter.show_headings:
+    if not cls.show_headings:
       rows = rows[1:]
 
     # Calculate the min widths of each column.
@@ -168,9 +159,15 @@ class AlignedFormatter(Formatter):
         if col:
           widths[i]= max(widths[i], min(max_column_width, len(str(col))))
         i += 1
+    return widths
 
+
+class AlignedFormatter(Formatter):
+  @classmethod
+  def PrintRows(cls, rows):
     # Print the result set rows aligned.
-    fmt = separator.join(['%%%ds' % -width for width in widths])
+    widths = Formatter.GetWidths(rows)
+    fmt = Formatter.separator.join(['%%%ds' % -width for width in widths])
     for row in rows:
       print fmt % tuple(row)
   
@@ -179,25 +176,128 @@ class AlignedFormatter(Formatter):
 
 
 class AutoFormatter(Formatter):
+  def GetGroupedLevelCount(self, rows, widths):
+    """Get the optimal number of levels to group, minimizing screen area.
+
+    Examine the columns from left to right simulating how much screen space
+    would be saved by grouping that column.  If there is a net reduction in
+    screen 'area', then the column will be grouped.  Otherwise it will not.
+
+    Store area of output after simulating grouping at each level successively.
+    the rightmost minimum area will be chosen.
+   
+    For example, consider the following areas after simulating grouping:
+      areas = [100, 90, 92, 90, 140, 281]
+   
+    With 1 level of grouping and with 3 levels of grouping we get the same
+    screen area, however the rightmost value is chosen, so the return value
+    will be 3.
+    """
+    rows = rows[1:]  # Skip headings.
+    XX = len(Formatter.separator)
+    width = sum(widths) + XX * (len(widths) - 1)
+    length = len(rows)
+    min_area = length * width
+    areas = [min_area for _ in widths]
+
+    for c in xrange(len(widths)):
+      # Test each row in the column to see if it is a duplicate of the previous
+      # row.  If so, it will be de-duped in the output.  If not, it means an
+      # extra row will be added, so we adjust the length variable accordingly.
+      prev = None
+      for row in rows:
+        if prev != row[c]:
+          length += 1
+          prev = row[c]
+
+      # To calculate the new width, we need to consider both the width of the 
+      # grouped column and the width of the remaining columns.  We also need to
+      # consider the width of the indent.
+      width = max(width - widths[c], widths[c]) + XX * (c + 1)
+      min_area = min(length * width, min_area)
+      if c < len(widths) - 1:
+        areas[c + 1] = width * length
+
+    # Find the rightmost minimum area from all simulated areas.
+    for c in xrange(len(widths), 0, -1):
+      if areas[c - 1] == min_area:
+        return c - 1
+    return 0
+
   def Print(self, rs):
-    print 'TODO(cpa): print these results auto-grouped'
+    """Prints a result set using the minimum screen space possible."""
+    widths = Formatter.GetWidths(rs)
+    levels = self.GetGroupedLevelCount(rs, widths)
+    cols = len(widths)
+
+    # Print the headings.
+    # Each grouped heading appears on its own row, with the following row
+    # indented one extra separator.
+    if Formatter.show_headings:
+      for c in xrange(cols):
+        if c < levels:
+          grouped_header = '%s\n%s' % (rs[0][c], Formatter.separator * (c + 1))
+          sys.stdout.write(grouped_header)
+        else:
+          parts = ['%%%ds' % -w for w in widths[c:-1]] + ['%s']
+          fmt = Formatter.separator.join(parts)
+          print fmt % rs[0][c:]
+          break
+
+    # Print the result set values.
+    prev = [None for _ in xrange(levels)]
+    for row in rs[1:]:
+      for c in xrange(cols):
+        value = row[c]
+        if c < levels:
+          if value != prev[c]:
+            # Within the grouped range, but the value needs to be printed.
+            sys.stdout.write(str(value))
+            if c < cols - 1:
+              sys.stdout.write('\n' + Formatter.separator * (c + 1))
+              for x in xrange(c, levels):
+                prev[x] = None
+            prev[c] = value
+          else:
+            # Grouped case: only print the indent.
+            sys.stdout.write(Formatter.separator)
+        else:
+          # Normal case: non-grouped columns.
+          parts = ['%%%ds' % -w for w in widths[c:-1]] + ['%s']
+          fmt = Formatter.separator.join(parts)
+          print fmt % tuple(row)[c:]
+          break
 
 
 class CSVFormatter(Formatter):
+  """Prints a result set with values separated by commas.
+
+  Non-numeric values are quoted, regardless of whether they need quoting.
+  """
   def Print(self, rs):
-    print 'TODO(cpa): print these results csv separated'
+    if not Formatter.show_headings:
+      rs = rs[1:]
+    if rs:
+      writer = csv.writer(sys.stdout, quoting=csv.QUOTE_NONNUMERIC)
+    for row in rs:
+      writer.writerow(tuple(row))
 
 
 class NullFormatter(Formatter):
+  """Prints a result set with values delimited by a null character (\0)."""
   def Print(self, rs):
-    print 'TODO(cpa): print these results null separated'
+    if not Formatter.show_headings:
+      rs = rs[1:]
+    for row in rs:
+      print '\0'.join([str(x) for x in row])
 
 
 def InitFormatters():
+  """Create instances of each Formatter available to ash_query.py."""
   AlignedFormatter('aligned', 'Columns are aligned and separated with spaces.')
   AutoFormatter('auto', 'TODO(cpa): Automatically group redundant values.')
-  CSVFormatter('csv', 'TODO(cpa): Columns are comma separated with strings quoted.')
-  NullFormatter('null', 'TODO(cpa): Columns are null separated with strings quoted.')
+  CSVFormatter('csv', 'Columns are comma separated with strings quoted.')
+  NullFormatter('null', 'Columns are null separated with strings unquoted.')
 
 
 def main(argv):
