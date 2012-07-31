@@ -326,13 +326,13 @@ try_prepare:
 /**
  * Execute a query or abort the program with the DB error message.
  */
-ResultSet * Database::exec(const string & query) const {
+ResultSet * Database::exec(const string & query, const int limit) const {
   // Load the relevant configured values.
   Config & config = Config::instance();
 
   int max_retries = config.get_int("DB_MAX_RETRIES", -1);
   if (max_retries <= 0) max_retries = 5;
-  int tries = max_retries + 1;
+  int tries = max_retries + 1, fetched = 0;
 
   ResultSet::HeadersType headers;
   ResultSet::DataType results;
@@ -343,7 +343,8 @@ ResultSet * Database::exec(const string & query) const {
   // YES, this is a GOTO target.  This is used to implement the retry logic.
   // If a query fails because of a lock, it may goto this block to retry.
 try_sql:
-  for (rows = 0; true; ++rows) {
+  fetched = 0;
+  for (rows = 0; fetched < limit || limit <= 0; ++rows) {
     int result = sqlite3_step(ps);
     switch (result) {
       // TODO(cpa): add more cases to handle errors.
@@ -365,6 +366,7 @@ try_sql:
           }
           results.back().push_back(ss.str());
         }
+        ++fetched;
         continue;  // for loop
       case SQLITE_CONSTRAINT:
         // Note: there is no point retrying this type of error.

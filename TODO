@@ -1,2 +1,10 @@
 TODO
+  [x] add a --limit flag to ash_query to add a limit qualifier to the query if none exists.
+  [x] include the new flag in the man page
+  [x] add make install_python and install_c targets to the Makefile
+  [ ] add documentation to the page featuring the Python version
+  [ ] finish the ip address feature in unix.py to use ASH_CFG_ variables
+  [ ] confirm that the code works on a mac
+  [ ] test with cssh for db locking and timeout settings - tune
+  [x] change the default logging level in the configs back to WARNING
   [ ] 

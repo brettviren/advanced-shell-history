@@ -102,7 +102,7 @@ fi
 # If python 2.7 or above is installed, do nothing - argparse is included.
 python_version="$( "${PYTHON_BIN}" --version 2>&1 )"
 max_python_version="$( echo -e "${python_version}\nPython 2.7" \
-  | sort --version-sort \
+  | sort --general-numeric-sort \
   | tail -n1
 )"
 if [[ "$python_version" == "$max_python_version" ]]; then

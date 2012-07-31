@@ -25,7 +25,7 @@ TOOD(cpa): add logging to this at some point.
 __author__ = 'Carl Anderson (carl.anderson@gmail.com)'
 
 # NOTE: This variable is set automatically by the Makefile.
-__version__ = '0.3.r132'
+__version__ = '0.5.r135'
 
 
 import csv
@@ -47,6 +47,7 @@ class Flags(util.Flags):
   arguments = (
     ('d', 'database', 'DB', str, 'a history database to query'),
     ('f', 'format', 'FMT', str, 'a format to display results'),
+    ('l', 'limit', 'LINES', int, 'a limit to the number of lines returned'),
     ('p', 'print_query', 'NAME', str, 'print the query SQL'),
     ('q', 'query', 'NAME', str, 'the name of the saved query to execute'),
   )
@@ -226,6 +227,7 @@ class AutoFormatter(Formatter):
 
   def Print(self, rs):
     """Prints a result set using the minimum screen space possible."""
+    if not rs: return
     widths = Formatter.GetWidths(rs)
     levels = self.GetGroupedLevelCount(rs, widths)
     cols = len(widths)
@@ -349,7 +351,7 @@ def main(argv):
       return 1
 
     sql = Queries.Get(flags.query)[1]
-    rs = util.Database().Fetch(sql)
+    rs = util.Database().Fetch(sql, limit=flags.limit)
     fmt.Print(rs)
 
   return 0

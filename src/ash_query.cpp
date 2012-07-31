@@ -39,10 +39,9 @@ using namespace flag;
 using namespace std;
 
 
-// TODO(cpa): add some formatting options (\0 delim, tab delim, etc).
-
 DEFINE_string(database, 'd', 0, "A history database to query.");
 DEFINE_string(format, 'f', 0, "A format to display results.");
+DEFINE_int(limit, 'l', 0, "Limit the number of rows returned.");
 DEFINE_string(print_query, 'p', 0, "Print the query SQL.");
 DEFINE_string(query, 'q', 0, "The name of the saved query to execute.");
 
@@ -116,7 +115,7 @@ int execute(const string & sql) {
   }
 
   // Execute the query and display any results.
-  ResultSet * rs = db.exec(sql);
+  ResultSet * rs = db.exec(sql, FLAGS_limit);
   formatter -> show_headings(!FLAGS_hide_headings);
   formatter -> insert(rs, cout);
   if (rs) delete rs;

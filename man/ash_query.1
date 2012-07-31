@@ -29,6 +29,7 @@ Usage: ash_query [options]
       --help
   -d  --database VALUE
   -f  --format VALUE
+  -l  --limit VALUE
   -p  --print_query VALUE
   -q  --query VALUE
   -F  --list_formats
@@ -92,6 +93,12 @@ If format is not specified, ash_query will look for a default format
 environment variable ASH_CFG_DEFAULT_FORMAT and try to use that.
 If neither are specified, the default is 'aligned'.
 
+
+.IP "  -l  --limit VALUE"
+
+Return no more than VALUE rows.  If the query already contains a limit
+clause, that clause overrides this value.  This value is ignored if less
+than or equal to zero.
 
 .IP "  -p  --print_query VALUE"
 

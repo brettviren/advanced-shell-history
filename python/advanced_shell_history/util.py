@@ -23,7 +23,7 @@ logging, flag parsing, configuration and database management.
 __author__ = 'Carl Anderson (carl.anderson@gmail.com)'
 
 # NOTE: This variable is set automatically by the Makefile.
-__version__ = '0.3.r132'
+__version__ = '0.5.r135'
 
 
 import argparse
@@ -192,14 +192,24 @@ class Database(object):
   def SanityCheck(cls, sql):
     return sql and sqlite3.complete_statement(sql)
 
-  def Fetch(self, sql, params=()):
+  def Fetch(self, sql, params=(), limit=None):
     """Execute a select query and return the result set."""
     if self.SanityCheck(sql):
       try:
         self.cursor.execute(sql, params)
         row = self.cursor.fetchone()
+        if not row: return None
         headings = tuple(row.keys())
-        rows = self.cursor.fetchall()
+        fetched = 1
+        if limit is None or limit <= 0:
+          rows = self.cursor.fetchall()
+        else:
+          rows = []
+          while fetched < limit:
+            row = self.cursor.fetchone()
+            if not row: break
+            rows.append(row)
+            fetched += 1
         rows.insert(0, headings)
         rows.insert(1, row)
         return rows

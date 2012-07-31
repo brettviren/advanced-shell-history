@@ -15,7 +15,7 @@
 #
 
 REV := $(shell svn up | cut -d' ' -f3 | cut -d. -f1 | sed -e 's:^:.r:' )
-VERSION  := 0.3
+VERSION  := 0.5
 RVERSION := ${VERSION}${REV}
 TMP_ROOT := /tmp
 TMP_DIR  := ${TMP_ROOT}/ash-${VERSION}
@@ -33,14 +33,21 @@ new:	clean all
 version:
 	sed -i -e "/^VERSION :=/s/:= .*/:= ${RVERSION}/" python/Makefile src/Makefile
 
-build: version
+build_python: version
 	@ printf "\nCompiling source code...\n"
-	@ cd src && make
 	@ cd python && make
-	chmod 555 src/_ash_log src/ash_query python/*.py python/advanced_shell_history/*.py
-	cp -af src/_ash_log src/ash_query python/*.py files/usr/local/bin
+	chmod 555 python/*.py python/advanced_shell_history/*.py
+	cp -af python/*.py files/usr/local/bin
 	cp -af python/advanced_shell_history/*.py files/usr/local/lib/advanced_shell_history/
 	chmod 775 python/*.py python/*/*.py
+
+build_c: version
+	@ printf "\nCompiling source code...\n"
+	@ cd src && make
+	chmod 555 src/_ash_log src/ash_query
+	cp -af src/_ash_log src/ash_query files/usr/local/bin
+
+build: build_python build_c
 
 man:
 	@ printf "\nGenerating man pages...\n"
@@ -58,7 +65,26 @@ man:
 	chmod 644 ./files${MAN_DIR}/*ash*.1.gz
 
 install: build man uninstall
-	@ printf "\nInstalling Advanced Shell History...\n"
+	@ echo "\nInstalling files:"
+	@ cd files && \
+	sudo tar -cpO --owner=root $$( \
+	  find -type f -o -type l \
+	    | grep -v '\.svn' \
+	) | sudo tar -xpvC /
+	@ printf "\n 0/ - Install completed!\n<Y    See: ${BEGIN_URL}\n/ \\ \n"
+
+install_python: build_python man uninstall
+	@ printf "\nInstalling Python Advanced Shell History...\n"
+	@ echo "\nInstalling files:"
+	@ cd files && \
+	sudo tar -cpO --owner=root $$( \
+	  find -type f -o -type l \
+	    | grep -v '\.svn' \
+	) | sudo tar -xpvC /
+	@ printf "\n 0/ - Install completed!\n<Y    See: ${BEGIN_URL}\n/ \\ \n"
+
+install_c: build_c man uninstall
+	@ printf "\nInstalling C++ Advanced Shell History...\n"
 	@ echo "\nInstalling files:"
 	@ cd files && \
 	sudo tar -cpO --owner=root $$( \
@@ -71,7 +97,7 @@ uninstall:
 	@ printf "\nUninstalling Advanced Shell History...\n"
 	sudo rm -rf /etc/ash /usr/lib/advanced_shell_history
 	sudo rm -f /usr/local/bin/_ash_log /usr/local/bin/ash_query
-	sudo rm -f /usr/local/bin/_ash_log.py
+	sudo rm -f /usr/local/bin/_ash_log.py /usr/local/bin/ash_query.py
 	sudo rm -f ${MAN_DIR}/_ash_log.1.gz ${MAN_DIR}/ash_query.1.gz
 	sudo rm -f ${MAN_DIR}/advanced_shell_history
 
