@@ -64,33 +64,31 @@ man:
 	cp -af ./files${MAN_DIR}/_ash_log.1.gz ./files${MAN_DIR}/_ash_log.py.1.gz
 	chmod 644 ./files${MAN_DIR}/*ash*.1.gz
 
-install: build man uninstall
-	@ echo "\nInstalling files:"
+fixperms:
+	chmod 644 files/usr/lib/advanced_shell_history/* files/etc/ash/*
+
+overlay.tar.gz: fixperms
 	@ cd files && \
-	sudo tar -cpO --owner=root $$( \
+	sudo tar -cpzf ../overlay.tar.gz $$( \
 	  find -type f -o -type l \
 	    | grep -v '\.svn' \
-	) | sudo tar -xpvC /
+	)
+
+install: build man overlay.tar.gz uninstall
+	@ echo "\nInstalling files:"
+	sudo tar -xpv --no-same-owner -C / -f overlay.tar.gz
 	@ printf "\n 0/ - Install completed!\n<Y    See: ${BEGIN_URL}\n/ \\ \n"
 
-install_python: build_python man uninstall
+install_python: build_python man overlay.tar.gz uninstall
 	@ printf "\nInstalling Python Advanced Shell History...\n"
 	@ echo "\nInstalling files:"
-	@ cd files && \
-	sudo tar -cpO --owner=root $$( \
-	  find -type f -o -type l \
-	    | grep -v '\.svn' \
-	) | sudo tar -xpvC /
+	sudo tar -xpv --no-same-owner -C / -f overlay.tar.gz
 	@ printf "\n 0/ - Install completed!\n<Y    See: ${BEGIN_URL}\n/ \\ \n"
 
-install_c: build_c man uninstall
+install_c: build_c man overlay.tar.gz uninstall
 	@ printf "\nInstalling C++ Advanced Shell History...\n"
 	@ echo "\nInstalling files:"
-	@ cd files && \
-	sudo tar -cpO --owner=root $$( \
-	  find -type f -o -type l \
-	    | grep -v '\.svn' \
-	) | sudo tar -xpvC /
+	sudo tar -xpv --no-same-owner -C / -f overlay.tar.gz
 	@ printf "\n 0/ - Install completed!\n<Y    See: ${BEGIN_URL}\n/ \\ \n"
 
 uninstall:
@@ -128,4 +126,4 @@ clean:	version
 	rm -f files/usr/share/man/man1/_ash_log.py.1.gz
 	rm -f files/usr/share/man/man1/_ash_log.1.gz
 	rm -f files/usr/share/man/man1/ash_query.1.gz
-	rm -rf ${TMP_DIR} ${TMP_FILE}
+	rm -rf ${TMP_DIR} ${TMP_FILE} overlay.tar.gz
