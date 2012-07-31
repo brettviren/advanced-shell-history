@@ -118,5 +118,5 @@ readonly -f ash::last_command
 readonly -f ash::precmd
 
 # Export functions used by subshells (not begin_session).
-export -f ash::last_command
-export -f ash::precmd
+#export -f ash::last_command
+#export -f ash::precmd

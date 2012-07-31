@@ -35,7 +35,7 @@ def GetEnv(variable):
 
 def GetEnvInt(variable):
   """Returns the environment variable value as an integer."""
-  return int(os.getenv(variable))
+  return int(os.getenv(variable) or 0)
 
 
 def GetEUID():
@@ -71,7 +71,10 @@ def GetPPID():
 
 def _GetProcStat(num):
   """Returns the i'th field of /proc/<pid>/stat of the shell."""
-  with open('/proc/%d/stat' % os.getppid()) as fd:
+  stat_file = '/proc/%d/stat' % os.getppid()
+  if not os.path.exists(stat_file):
+    return ''
+  with open(stat_file) as fd:
     data = fd.read()
     return data.split(' ', num + 1)[num]
 

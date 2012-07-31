@@ -126,5 +126,5 @@ function ash::log() {
 readonly -f ash::end_session
 readonly -f ash::log
 
-export -f ash::end_session
-export -f ash::log
+#export -f ash::end_session
+#export -f ash::log
