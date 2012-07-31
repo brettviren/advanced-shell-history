@@ -25,7 +25,7 @@ TOOD(cpa): add logging to this at some point.
 __author__ = 'Carl Anderson (carl.anderson@gmail.com)'
 
 # NOTE: This variable is set automatically by the Makefile.
-__version__ = '0.5.r135'
+__version__ = '0.5.r136'
 
 
 import csv

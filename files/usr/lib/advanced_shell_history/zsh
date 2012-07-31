@@ -19,7 +19,7 @@
 [[ -n "${ASH_SESSION_ID}" ]] && return
 
 # Make sure we are running the shell we think we are running.
-if ! ps ho cmd $$ | grep -q "zsh"; then
+if ! ps ho command $$ | grep -q "zsh"; then
   echo "The shell process name implies you're not running zsh..."
   return
 fi

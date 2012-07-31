@@ -146,7 +146,7 @@ const string unix::shell() {
     return DBObject::quote(sh);
   } else {
     // This is expected on OSX - no procfs so no /proc directory.
-    string sh = ps("ho cmd", shell_pid());
+    string sh = ps("ho command", shell_pid());
     return sh == "null" ? sh : DBObject::quote(sh);
   }
   return "null";
