@@ -70,7 +70,7 @@ fixperms:
 overlay.tar.gz: fixperms
 	@ cd files && \
 	sudo tar -cpzf ../overlay.tar.gz $$( \
-	  find -type f -o -type l \
+	  find . -type f -o -type l \
 	    | grep -v '\.svn' \
 	)
 
