@@ -1,7 +1,6 @@
 TODO
-  [ ] add documentation to the page featuring the Python version
   [ ] finish the ip address feature in unix.py to use ASH_CFG_ variables
-  [ ] test with cssh for db locking and timeout settings - tune
-  [ ] add OSX notes to the wiki - recruit OSX helpers
-  [ ] write an installer script for OSX for Python for those who do not want to install command line tools
+  [ ] test with cssh localhost x10 for db locking and timeout settings - tune
+  [ ] recruit OSX helpers
+  [ ] design a python or c++ daemon to manage the DB writing portion.
   [ ] 

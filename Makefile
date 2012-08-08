@@ -25,8 +25,8 @@ SRC_DEST := ..
 
 BEGIN_URL := http://code.google.com/p/advanced-shell-history/wiki/HOWTO_Begin
 
-.PHONY: all build clean install man mrproper src_tarball src_tarball_minimal uninstall version
-all:	version build man
+.PHONY: all build build_c build_python clean fixperms install install_c install_python man mrproper src_tarball src_tarball_minimal uninstall version
+all:	build man
 
 new:	clean all
 
@@ -62,6 +62,7 @@ man:
 	        | cut -d' ' -f1 ):" \
 	  | gzip -9 -c > ./files${MAN_DIR}/ash_query.1.gz
 	cp -af ./files${MAN_DIR}/_ash_log.1.gz ./files${MAN_DIR}/_ash_log.py.1.gz
+	cp -af ./files${MAN_DIR}/ash_query.1.gz ./files${MAN_DIR}/ash_query.py.1.gz
 	chmod 644 ./files${MAN_DIR}/*ash*.1.gz
 
 fixperms:
@@ -97,6 +98,7 @@ uninstall:
 	sudo rm -f /usr/local/bin/_ash_log /usr/local/bin/ash_query
 	sudo rm -f /usr/local/bin/_ash_log.py /usr/local/bin/ash_query.py
 	sudo rm -f ${MAN_DIR}/_ash_log.1.gz ${MAN_DIR}/ash_query.1.gz
+	sudo rm -f ${MAN_DIR}/_ash_log.py.1.gz ${MAN_DIR}/ash_query.py.1.gz
 	sudo rm -f ${MAN_DIR}/advanced_shell_history
 
 tarball:
@@ -112,7 +114,7 @@ src_tarball: clean tarball
 	mv ${TMP_FILE} ${SRC_DEST}/ash-${RVERSION}.tar.gz
 
 mrproper: clean
-	rm -f src/sqlite3.*
+	rm -f src/sqlite3.* python/advanced_shell_history/argparse.py
 
 clean:	version
 	@ printf "\nCleaning temp and trash files...\n"
@@ -126,4 +128,6 @@ clean:	version
 	rm -f files/usr/share/man/man1/_ash_log.py.1.gz
 	rm -f files/usr/share/man/man1/_ash_log.1.gz
 	rm -f files/usr/share/man/man1/ash_query.1.gz
+	rm -f files/usr/share/man/man1/ash_query.py.1.gz
+	rm -f python/advanced_shell_history/*.pyc
 	rm -rf ${TMP_DIR} ${TMP_FILE} overlay.tar.gz

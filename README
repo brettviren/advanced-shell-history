@@ -16,7 +16,9 @@ Features of this utility:
 
 
 HOW TO BUILD:
-  $ make
+  $ make build_c       # Builds the C++ version
+  $ make build_python  # Builds the Python version
+  $ make build         # Builds both versions
 
 Notes:
   * A full build of the code from source depends on the following commands
@@ -35,7 +37,9 @@ Notes:
 
 
 HOW TO INSTALL:
-  $ make install
+  $ make install_c       # Installs the C++ version
+  $ make install_python  # Installs the Python version
+  $ make install         # Installs both versions
 
 
 HOW TO UNINSTALL:
@@ -76,6 +80,7 @@ Caveats:
 
 Bugs:
   * doesn't capture exec'ed commands: example: exec rm /tmp/foo # is lost
+  * the python version is about 10x slower than the C++ version
 
 Author: cpa@google.com (Carl Anderson)
-Last Update: 2011-09-17
+Last Update: 2012-08-06
