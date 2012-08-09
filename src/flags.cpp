@@ -26,14 +26,6 @@ namespace flag {
 using namespace std;
 
 
-// Static members.
-string Flag::codes;
-string Flag::program_name;
-list<struct option> Flag::options;
-list<Flag *> Flag::instances;
-map<const char, Flag *> Flag::short_names;
-map<const string, Flag *> Flag::long_names;
-
 static unsigned int longest_long_name = 0;
 static string prog_name;
 
@@ -55,7 +47,7 @@ void Flag::show_help(ostream & out) {
   char * program_name = strdup(prog_name.c_str());
   out << "\nUsage: " << basename(program_name);
 
-  list<Flag *> & flags = Flag::instances;
+  list<Flag *> & flags = Flag::instances();
   if (flags.empty()) return;
 
   out << " [options]";
@@ -78,10 +70,10 @@ int Flag::parse(int * p_argc, char *** p_argv, const bool remove_flags) {
   prog_name = argv[0];
 
   // Put the options into an array, as getopt expects them.
-  struct option * options = new struct option[Flag::options.size() + 1];
+  struct option * options = new struct option[Flag::options().size() + 1];
   int x = 0;
   typedef list<struct option>::iterator iter;
-  for (iter i = Flag::options.begin(), e = Flag::options.end(); i != e; ++i) {
+  for (iter i = Flag::options().begin(), e = Flag::options().end(); i != e; ++i) {
     options[x++] = *i;
   }
   // This sentinel is needed to prevent the getopt library from segfaulting
@@ -91,13 +83,13 @@ int Flag::parse(int * p_argc, char *** p_argv, const bool remove_flags) {
 
   // Parse the arguments.
   for (int c = 0, index = 0; c != -1; index = 0) {
-    c = getopt_long(argc, argv, Flag::codes.c_str(), options, &index);
+    c = getopt_long(argc, argv, Flag::codes().c_str(), options, &index);
     switch (c) {
       case -1: break;
 
       case 0: {  // longopt with no short name.
         const string long_name = options[index].name;
-        Flag * flag = Flag::long_names[long_name];
+        Flag * flag = Flag::long_names()[long_name];
         if (flag) flag -> set(optarg);
         if (flag == &FLAGS_OPT_help) {
           Flag::show_help(cout);
@@ -114,11 +106,11 @@ int Flag::parse(int * p_argc, char *** p_argv, const bool remove_flags) {
       }
 
       default: {  // short option
-        if (Flag::short_names.find(c) == Flag::short_names.end()) {
+        if (Flag::short_names().find(c) == Flag::short_names().end()) {
           // This should never happen.
           cerr << "ERROR: failed to find a flag matching '" << c << "'" << endl;
         } else {
-          Flag * flag = Flag::short_names[c];
+          Flag * flag = Flag::short_names()[c];
           if (flag) flag -> set(optarg);
         }
         break;
@@ -175,13 +167,13 @@ bool all_isgraph(const char * input) {
 Flag::Flag(const char * ln, const char sn, const char * ds, const bool ha)
   : long_name(ln), short_name(sn), description(ds), has_arg(ha)
 {
-  Flag::instances.push_back(this);
+  Flag::instances().push_back(this);
 
   // Map the names to this Flag object (if names are valid).
   if (short_name && isgraph(short_name))
-    safe_add(Flag::short_names, short_name, this);
+    safe_add(Flag::short_names(), short_name, this);
   if (all_isgraph(long_name)) {
-    safe_add(Flag::long_names, string(long_name), this);
+    safe_add(Flag::long_names(), string(long_name), this);
   } else {
     cerr << "WARNING: Flag long name '" << long_name
          << "' is not legal and will be ignored." << endl;
@@ -198,14 +190,14 @@ Flag::Flag(const char * ln, const char sn, const char * ds, const bool ha)
 
   // Create an option struct and add it to the list.
   struct option opt = {ln, has_arg ? 1 : 0, 0, sn};
-  Flag::options.push_back(opt);
+  Flag::options().push_back(opt);
 
   // Add the short_name to a flag_code string.
   if (short_name) {
      if (isgraph(short_name)) {
-      Flag::codes.push_back(short_name);
+      Flag::codes().push_back(short_name);
       if (has_arg) {
-        Flag::codes.push_back(':');
+        Flag::codes().push_back(':');
       }
     } else {
       cerr << "WARNING: Flag short name character '" << short_name

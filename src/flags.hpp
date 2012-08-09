@@ -90,6 +90,12 @@ static flag::BoolFlag FLAGS_OPT_ ## long_name(#long_name, short_name, \
   &FLAGS_ ## long_name, false, desc, false)
 
 
+#define STATIC_SINGLETON(name, type_name) \
+static type_name & name() { \
+  static type_name rval; \
+  return rval; \
+}
+
 /**
  * This class makes it easy to implement command-line flags.  Class instances
  * are created by the preprocessor macros defined above.
@@ -101,12 +107,21 @@ class Flag {
     static void show_help(ostream & out);
 
   private:
-    static string program_name;
-    static string codes;
-    static list<struct option> options;
-    static list<Flag *> instances;
-    static map<const char, Flag *> short_names;
-    static map<const string, Flag *> long_names;
+    STATIC_SINGLETON(codes, string)
+    STATIC_SINGLETON(options, list<struct option>)
+    STATIC_SINGLETON(instances, list<Flag *>)
+    // Note: these two maps do not use the STATIC_SINGLETON preprocessor macro
+    //       because the type name contains a comma; this confuses the parser.
+    //STATIC_SINGLETON(short_names, map<const char, Flag *>)
+    //STATIC_SINGLETON(long_names, map<const string, Flag *>)
+    static map<const char, Flag *> & short_names() {
+      static map<const char, Flag *> rval;
+      return rval;
+    }
+    static map<const string, Flag *> & long_names() {
+      static map<const string, Flag *> rval;
+      return rval;
+    }
 
   // NON-STATIC
   public:
