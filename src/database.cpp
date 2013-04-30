@@ -26,6 +26,7 @@
 #include <stdlib.h>    /* for rand, srand */
 #include <string.h>    /* for strerror */
 #include <time.h>      /* for time */
+#include <unistd.h>    /* for getpid */
 
 #include <iostream>
 #include <list>
