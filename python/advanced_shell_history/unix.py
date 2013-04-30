@@ -18,6 +18,7 @@
 
 import os
 import pwd
+import re
 import socket
 import sys
 import time
@@ -43,10 +44,53 @@ def GetEUID():
   return os.geteuid()
 
 
+def _GetIfconfig():
+  """Returns the lines emitted by /sbin/ifconfig -a"""
+  try:
+    fd = subprocess.Popen(
+        "/sbin/ifconfig -a",
+        shell=True,
+        bufsize=8000,
+        stdout=subprocess.PIPE).stdout
+    return [x.lower().rstrip() for x in fd.readlines()]
+  except Error:
+    return None
+
+
+def _ParseIfconfig():
+  """Returns a dict of devices to ip addresses for this machine."""
+  device_matcher = re.compile(r'([^:\s]+)[:\s]')
+  address_matcher = re.compile(r'\s+(inet6?\s)(addr:)?\s?([^\s/%]+)')
+  mac_matcher = re.compile(r'.*\s(hwaddr|ether)\s([0-9a-f:]+)')
+
+  device = None
+  devices = {}
+  inet_addresses = []
+  mac_address = ''
+
+  for line in _GetIfconfig():
+    if device_matcher.match(line):
+      if device:
+        devices['%s|%s' % (device, mac_address)] = inet_addresses
+        inet_addresses = []
+        mac_address = ''
+      device = device_matcher.match(line).groups()[0]
+    elif address_matcher.match(line):
+      inet_addresses.append(address_matcher.match(line).groups()[2])
+    if mac_matcher.match(line):
+      mac_address = mac_matcher.match(line).groups()[1]
+
+  return devices
+
+
 def GetHostIp():
   """Returns the ip addresses for this host."""
+  ips = []
   # TODO(cpa): respect the relevant ASH_CFG_ settings here.
-  return os.popen('/bin/hostname -I').read().strip()
+  for addresses in _ParseIfconfig().itervalues():
+    for address in addresses:
+      ips.append(address)
+  return ' '.join(ips)
 
 
 def GetHostName():

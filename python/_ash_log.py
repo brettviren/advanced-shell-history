@@ -23,7 +23,7 @@ system-specific metadata.
 __author__ = 'Carl Anderson (carl.anderson@gmail.com)'
 
 # NOTE: This variable is set automatically by the Makefile.
-__version__ = '0.5.r152'
+__version__ = '0.5.r159'
 
 
 import logging

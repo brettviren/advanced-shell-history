@@ -89,7 +89,6 @@ static bool FLAGS_ ## long_name; \
 static flag::BoolFlag FLAGS_OPT_ ## long_name(#long_name, short_name, \
   &FLAGS_ ## long_name, false, desc, false)
 
-
 #define STATIC_SINGLETON(name, type_name) \
 static type_name & name() { \
   static type_name rval; \
