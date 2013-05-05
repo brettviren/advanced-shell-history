@@ -84,7 +84,7 @@ function get_sqlite() {
 
   SQLITE_DIR="sqlite-amalgamation-${SQLITE_VER}"
   SQLITE_ZIP="${SQLITE_DIR}.zip"
-  SQLITE_URL="http://www.sqlite.org/${SQLITE_ZIP}"
+  SQLITE_URL="http://www.sqlite.org/2013/${SQLITE_ZIP}"
 
   fetch "${SQLITE_URL}" "${SQLITE_ZIP}"
 }
