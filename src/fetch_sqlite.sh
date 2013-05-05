@@ -74,8 +74,8 @@ function get_sqlite() {
   if [ -z "${SQLITE_VER:-}" ]; then
     echo "Inspecting ${download_url} to guess latest version..."
     SQLITE_VER="$( fetch ${download_url} \
-      | grep -m1 'href=./sqlite-amalgamation-[0-9]*\.zip.' \
-      | sed -e 's:.*href=./sqlite-amalgamation-\([0-9]*\)\.zip.*:\1:' \
+      | grep -m1 'href=.2013/sqlite-amalgamation-[0-9]*\.zip.' \
+      | sed -e 's:.*href=.2013/sqlite-amalgamation-\([0-9]*\)\.zip.*:\1:' \
     )"
   fi
   if [ -z "${SQLITE_VER:-}" ]; then
