@@ -114,7 +114,7 @@ src_tarball: clean tarball
 	mv ${TMP_FILE} ${SRC_DEST}/ash-${RVERSION}.tar.gz
 
 mrproper: clean
-	rm -f src/sqlite3.o python/advanced_shell_history/argparse.py
+	rm -f python/advanced_shell_history/argparse.py
 
 clean:	version
 	@ printf "\nCleaning temp and trash files...\n"
