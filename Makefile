@@ -15,7 +15,7 @@
 #
 
 REV := $(shell svn up | cut -d' ' -f3 | cut -d. -f1 | sed -e 's:^:.r:' )
-VERSION  := 0.5
+VERSION  := 0.7
 RVERSION := ${VERSION}${REV}
 TMP_ROOT := /tmp
 TMP_DIR  := ${TMP_ROOT}/ash-${VERSION}

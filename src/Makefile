@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-VERSION := 0.5.r159
+VERSION := 0.7.r162
 LOGGER	:= _ash_log
 QUERIER	:= ash_query
 EXES	:= ${LOGGER} ${QUERIER}
@@ -28,7 +28,7 @@ C	:= gcc
 FLAGS	:= -g -Wall -DASH_VERSION="\"${VERSION}\"" -ansi -pedantic -O2
 RT_LIB	:= -lrt
 
-.PHONY:	all clean distclean new reallyclean
+.PHONY:	all clean distclean new
 all:	${EXES}
 
 ${QUERIER}: sqlite3.o ${OBJ_Q}
@@ -43,9 +43,6 @@ ${LOGGER}: sqlite3.o ${OBJ_L}
 queries.cpp: queries.hpp queries.l
 	flex -o queries.cpp queries.l
 
-sqlite3.c:
-	./fetch_sqlite.sh
-	
 sqlite3.o: sqlite3.c
 	${C} -DSQLITE_OMIT_LOAD_EXTENSION -DSQLITE_THREADSAFE=0 -c sqlite3.c
 
@@ -57,9 +54,6 @@ distclean:
 
 clean:
 	rm -f ${TRASH}
-
-reallyclean: clean
-	rm -f sqlite3.*
 
 # This awesome target attempts to inject the exactly-right CPP dependencies
 # into this Makefile whenever a CPP file is edited.

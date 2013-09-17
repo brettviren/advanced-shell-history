@@ -12,4 +12,5 @@ support the realtime clock that I'm using and there is a new version of the STL
 library that segfaults when I try to use it.
 
 Also, on most systems, calling Python once per command is not a terrible price
-to pay.
+to pay.  On my system, python2.7 is a 3M binary.  It lives in memory as long as
+you are entering commands, so you really only pay to load it the first time.
