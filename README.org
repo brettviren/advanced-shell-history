@@ -10,10 +10,10 @@ Save your command line history in a sqlite3 DB!
    - current working directory of the command
    - session details such as tty, pid, ppid, ssh connection details
 - works with multiple shells (zsh and bash)
-- saves history into a sqlite3 database
+- saves history into an Sqlite3 database
 - provides a convenient tool to query the history database.
 
-* Installation
+* Installation and Setup
 
 System-wide installation (default prefix is =/usr/local=):
 
@@ -30,21 +30,31 @@ Personal installation:
   $ source $HOME/.ash/bash
 #+END_EXAMPLE
 
-* How Does This Work
+* Queries 
 
-This program operates on the assumption that your shell gives you the ability
-to execute a custom operation before a prompt is redrawn on your terminal.
+The history can be queried with =ash-query= using predefined and named SQL queries defined in =~/.ash/queries=.
 
-Bash provides the =PROMPT_COMMAND= environment variable while Zsh gives us the
-=precmd= environment function.  Both are repurposed by this program to log the
-previous command into a local database before each new prompt is displayed.
+#+BEGIN_EXAMPLE
+  # lists the available queries
+  $ ash_query -Q  
 
-Many people have never heard of this feature or found a great use for it.
-However, if you currently DO use this feature, you can still use this program.
-The code renames your existing hook and invokes it after saving the previous
-command.
+  # execute the query named 'CWD' to view history in the current working directory.
+  $ ash_query -q CWD  
+#+END_EXAMPLE
 
-More information is in the [[./doc]] directory.
+There are predefined and named formats that can be selected to print the results.
+
+#+BEGIN_EXAMPLE
+  # list the supported display formats.
+  $ ash_query -F
+
+  # display the CWD history in CSV format.
+  $ ash_query -q CWD -f csv
+#+END_EXAMPLE
+
+The entries in =~/.ash/queries= may include environment variables.
+
+More information is in the [[./doc]] directory in the original Google Code wiki files.
 
 * Caveats
 
@@ -64,9 +74,12 @@ More information is in the [[./doc]] directory.
   enable options necessary for the magic to work.
 
 * Bugs
+
 - doesn't capture =exec='ed commands: example: =exec rm /tmp/foo= is lost
 - the Python version is about 10x slower than the C++ version (and not installed)
 
-Author: cpa@google.com (Carl Anderson)
-Last Update: 2012-08-06 (by cpa)
-Refresh: brett.viren@gmail.com
+* Meta
+
+- Original author: cpa@google.com (Carl Anderson)
+- Last Update: 2012-08-06 (by cpa)
+- Refresh: brett.viren@gmail.com
