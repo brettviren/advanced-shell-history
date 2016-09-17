@@ -25,11 +25,11 @@ if ! ps ho command $$ | grep -q "bash"; then
 fi
 
 # Use the default config file if one was not specified.
-export ASH_CFG="${ASH_CFG:-/etc/ash/ash.conf}"
+export ASH_CFG="${ASH_CFG:-ETCDIR/ash.conf}"
 
 # Source the config files to set all ASH_ shell variables.
 source <( grep "^[ ]*ASH_[A-Za-z_0-9]*=['\"].*['\"].*$" "${ASH_CFG}" \
-            | tr -cd '\11\12\15\40-\176' ) || exit 1
+            | tr -cd '\11\12\15\40-\176' ) || return 1
 
 export $( sed -n -e "/^[ ]*ASH_[A-Za-z_0-9]*=.*/s:=.*::p" "${ASH_CFG}" )
 
@@ -38,7 +38,7 @@ if [[ "${ASH_CFG_READONLY_ENV:-0}" != "0" ]]; then
   readonly $( sed -n -e "/^[ ]*ASH_[A-Za-z_0-9]*=.*/s:=.*::p" "${ASH_CFG}" )
 fi
 
-source "${ASH_CFG_LIB}/common" || exit 1
+source "${ASH_CFG_LIB}/common" || return 1
 
 
 # Display error and abort if PROMPT_COMMAND is readonly.
@@ -48,6 +48,7 @@ if readonly -p | grep -q "^declare -[[:alpha:]]\+ PROMPT_COMMAND="; then
     return
   fi
 fi
+ASH_PROMPT_COMMAND=$PROMPT_COMMAND
 export PROMPT_COMMAND='ASH=1 ash::begin_session'
 
 # HISTCONTROL is emptied primarily to remove the options that de-dupe identical
@@ -90,7 +91,7 @@ function ash::precmd() {
 
   ash::log ${@:-0 0}
   if typeset -p ASH_PROMPT_COMMAND &>/dev/null; then
-    "${ASH_PROMPT_COMMAND}"
+      ${ASH_PROMPT_COMMAND}
   fi
   # Causes the exit code to be reset to what it was before logging.
   local rval=${1:-0} && shift

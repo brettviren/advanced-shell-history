@@ -75,12 +75,12 @@ file so it is automatically started with each new session.
 
 .B For bash, add this to your ~/.bashrc file:
 .RS
-source /usr/lib/advanced_shell_history/bash
+source ETCDIR/bash
 .RE
 
 .B For zsh, add this to your ~/.zshrc file:
 .RS
-source /usr/lib/advanced_shell_history/zsh
+source ETCDIR/zsh
 .RE
 
 
@@ -169,12 +169,12 @@ http://code.google.com/p/advanced-shell-history/w for more details on how
 the data is stored internally and other tips for querying the data.
 .RE
 
-.I /usr/lib/advanced_shell_history/bash
+.I ETCDIR/bash
 .RS
 Sourced for bash sessions.
 .RE
 
-.I /usr/lib/advanced_shell_history/zsh
+.I ETCDIR/zsh
 .RS
 Sourced for zsh sessions.
 .RE
@@ -240,7 +240,7 @@ this variable using the generated ID number.
 
 
 .SH "SEE ALSO"
-.BR ash_query(1)
+.BR ash-query(1)
 to query history
 
 

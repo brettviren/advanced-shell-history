@@ -7,6 +7,8 @@ import os.path as osp
 
 def options(opt):
     opt.load('compiler_cxx')
+    opt.add_option('--user', action='store_true', default=False,
+                   help='Install into user directory.')
 
 def configure(conf):
     conf.load('compiler_cxx')
@@ -14,6 +16,13 @@ def configure(conf):
     conf.env.CXXFLAGS += "-Wall -ansi -pedantic -O2".split()
     conf.env.CXXFLAGS += ['-DASH_VERSION="%s"' % VERSION]
     conf.check_cc(lib='sqlite3', uselib_store='sqlite3', mandatory=True)
+
+    conf.env.BINDIR = osp.join(conf.env.PREFIX,'bin')
+    conf.env.MANDIR = osp.join(conf.env.PREFIX,'man')
+    conf.env.ETCDIR = osp.join(conf.env.PREFIX,'etc/advanced-shell-history')
+    if conf.options.user:
+        conf.env.ETCDIR = osp.join(conf.env.PREFIX,'.ash')
+
 
 def build(bld):
     ash_lsrc = ['command', 'config', 'database', 'flags',
@@ -36,20 +45,15 @@ def build(bld):
         src = task.inputs[0]
         tgt = task.outputs[0]
         text = src.read()
-        etcdir = osp.join(bld.env.PREFIX,'etc/advanced-shell-history')
-        bindir = osp.join(bld.env.PREFIX,'bin')
-        text = text.replace('/etc/ash', etcdir)
-        text = text.replace('/usr/lib/advanced_shell_history', etcdir)
-        text = text.replace('/usr/local/bin', bindir)
-        text = text.replace('exit 1','return 1') # don't kill shell on sourcing!
-        text = text.replace('_ash_log','ash-log')
+        for thing in ['ETCDIR','BINDIR']:
+            text = text.replace(thing, getattr(bld.env, thing))
         tgt.write(text)
 
     bld(rule=replace_prefix,
-        source="man/_ash_log.1", target='man1/ash-log.1')
+        source="man/ash-log.1", target='man1/ash-log.1')
     bld(rule=replace_prefix,
-        source="man/ash_query.1", target='man1/ash-query.1')
-    bld.install_files('${PREFIX}/man1',['man1/ash-log.1','man1/ash-query.1'])
+        source="man/ash-query.1", target='man1/ash-query.1')
+    bld.install_files('${MANDIR}/man1',['man1/ash-log.1','man1/ash-query.1'])
 
     etcfiles = []
     for fname in ['ash.conf', 'queries']:
@@ -66,5 +70,4 @@ def build(bld):
             source = osp.join("files/usr/lib/advanced_shell_history", fname),
             target = tgt)
 
-    bld.install_files('${PREFIX}/etc/advanced-shell-history',
-                      etcfiles)
+    bld.install_files('${ETCDIR}', etcfiles)

@@ -23,7 +23,9 @@ DEMO: {
       c.session_id,
       c.cwd as 'where',
       datetime(c.start_time, 'unixepoch', 'localtime') as 'when',
-      c.command as what
+      c.command as what,
+      c.rval as 'rc',
+      c.duration as 'dur'
     from
       commands as c
       inner join sessions as s
@@ -40,7 +42,9 @@ CWD: {
     select
       c.session_id as "session",
       datetime(c.start_time, 'unixepoch', 'localtime') as "when",
-      c.command as "what"
+      c.command as "what",
+      c.rval as 'rc',
+      c.duration as 'dur'
     from
       commands as c
     where
@@ -58,7 +62,9 @@ RCWD: {
       c.session_id as "session",
       c.cwd as "where",
       datetime(c.start_time, 'unixepoch', 'localtime') as "when",
-      c.command as "what"
+      c.command as "what",
+      c.rval as 'rc',
+      c.duration as 'dur'
     from
       commands as c
     where
@@ -79,7 +85,9 @@ ME: {
       datetime(c.start_time, 'unixepoch', 'localtime') as start_time,
       c.duration as 'secs',
       c.rval as exit,
-      c.command
+      c.command,
+      c.rval as 'rc',
+      c.duration as 'dur'
     from
       commands as c
       left outer join sessions as s

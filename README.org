@@ -15,8 +15,19 @@ Save your command line history in a sqlite3 DB!
 
 * Installation
 
+System-wide installation (default prefix is =/usr/local=):
+
 #+BEGIN_EXAMPLE
-  $ ./waf --prefix=/paht/to/install configure build install
+  $ ./waf --prefix=/path/to/install configure build
+  $ sudo ./waf install
+  $ source /path/to/install/etc/advanced-shell-history/bash
+#+END_EXAMPLE
+
+Personal installation: 
+
+#+BEGIN_EXAMPLE
+  $ ./waf --user --prefix=$HOME configure build install
+  $ source $HOME/.ash/bash
 #+END_EXAMPLE
 
 * How Does This Work

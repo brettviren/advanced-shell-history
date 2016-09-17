@@ -20,7 +20,7 @@
 
 # Make sure there is a command logger.
 if [[ -z "${ASH_LOG_BIN}" ]]; then
-  ASH_LOG_BIN=/usr/local/bin/_ash_log
+  ASH_LOG_BIN=BINDIR/ash-log
 fi
 if ! [[ -x "${ASH_LOG_BIN}" ]]; then
   return

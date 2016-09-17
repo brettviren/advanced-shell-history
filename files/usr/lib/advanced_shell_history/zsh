@@ -25,11 +25,11 @@ if ! ps ho command $$ | grep -q "zsh"; then
 fi
 
 # Use the default config file if one was not specified.
-ASH_CFG="${ASH_CFG:-/etc/ash/ash.conf}"
+ASH_CFG="${ASH_CFG:-ETCDIR/ash.conf}"
 
 # Source the config files to set all ASH_ shell variables.
 source <( grep "^[ ]*ASH_[A-Za-z_0-9]*=['\"].*['\"].*$" "${ASH_CFG}" \
-            | tr -cd '\11\12\15\40-\176' ) || exit 1
+            | tr -cd '\11\12\15\40-\176' ) || return 1
 
 export $( sed -n -e "/^[ ]*ASH_[A-Za-z_0-9]*=.*/s:=.*::p" "${ASH_CFG}" )
 
@@ -38,7 +38,7 @@ if [[ "${ASH_CFG_READONLY_ENV:-0}" != "0" ]]; then
   readonly $( sed -n -e "/^[ ]*ASH_[A-Za-z_0-9]*=.*/s:=.*::p" "${ASH_CFG}" )
 fi
 
-source "${ASH_CFG_LIB}/common" &>/dev/null || exit 1
+source "${ASH_CFG_LIB}/common" &>/dev/null || return 1
 
 
 #

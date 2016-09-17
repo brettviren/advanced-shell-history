@@ -124,7 +124,7 @@ Suppress the headings of output tables (sometimes useful for scripting).
 .IP "  -Q  --list_queries"
 
 List the names and descriptions of all available saved queries taken from
-/etc/ash/queries and ~/.ash/queries.
+/etc/ash/queries, $ASH_CFG_DIR and ~/.ash/queries.
 
 .IP "      --version"
 
@@ -153,12 +153,12 @@ http://code.google.com/p/advanced-shell-history/w for more details on how
 the data is stored internally and other tips for querying the data.
 .RE
 
-.I /usr/lib/advanced_shell_history/bash
+.I ETCDIR/bash
 .RS
 Sourced for bash sessions.
 .RE
 
-.I /usr/lib/advanced_shell_history/zsh
+.I ETCDIR/zsh
 .RS
 Sourced for zsh sessions.
 .RE
@@ -211,7 +211,7 @@ are DEBUG, INFO, WARN, ERROR and FATAL.
 
 
 .SH "SEE ALSO"
-.BR _ash_log(1)
+.BR ash-log(1)
 for logging history
 
 
