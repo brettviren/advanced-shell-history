@@ -1,0 +1,14 @@
+#summary How to contribute code and ideas to this project.
+#labels Phase-Implementation,Phase-Support
+
+= Introduction =
+
+Your ideas and contributions are welcome!  If you would like to get involved, that's great - please feel free.
+
+= Details =
+
+If you have found a bug, please see the [HOWTO_Debug guide about enabling debug output] so you can include as much information in [http://code.google.com/p/advanced-shell-history/issues/entry your issue report] as possible.
+
+Bonus points if you include a patch with your bug report.
+
+Double extra bonus points if you [http://code.google.com/p/advanced-shell-history/source/checkout checkout the repository] and submit a change directly (please remember to [http://code.google.com/p/advanced-shell-history/issues/entry create an issue] for the change first).

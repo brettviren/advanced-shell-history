@@ -1,0 +1,51 @@
+#summary How to compile and install from source
+#labels Phase-Implementation,Phase-Deploy,Phase-Support
+
+= Introduction =
+
+To compile and install this program from source you will need a basic linux toolchain (g++, gcc, libc and make) and the ability to sudo on the target system.  This guide will walk you through compiling and installing everything from source.
+
+If you are running Mac OSX, you may need to perform an extra step.
+
+
+= Steps =
+
+ # If you are running OSX - please refer to the [HOWTO_Install_In_OSX   OSX Notes].
+ # Open a new terminal window.  The following steps will be performed within the shell.
+ # Download and unpack the source tarball (or minimal source tarball). Alternatively, you can [http://code.google.com/p/advanced-shell-history/source/checkout checkout the repository] and continue building from the next step.
+{{{
+  curl -s http://advanced-shell-history.googlecode.com/files/ash-0.5.r155.tar.gz -o /tmp/ash-src.tar.gz
+  cd /tmp
+  tar -xvzpf ash-*.tar.gz
+
+# Alternatively, you can check out the source with svn:
+
+  svn checkout http://advanced-shell-history.googlecode.com/svn/branches/rb-0.5 /tmp/ash-src
+}}}
+ # Compile the code.
+{{{
+  cd /tmp/ash-src
+  make build
+}}}
+  * NOTE: If there are problems compiling the C++ source on your system, you can build a Python-only version instead.
+{{{
+  make build_python
+}}}
+ # If you wish to install the package system-wide, you can use the included makefile target to do so.  If you do NOT want to install the package system-wide, see the guide for [HOWTO_Custom custom installations.]
+{{{
+  make install
+}}}
+  * You can also install the Python-only version if there are problems with the C++ version.
+{{{
+  make install_python
+}}}
+ # Cleanup (Optional).
+{{{
+  cd /tmp
+  rm -rf ash-src ash-*.tar.gz
+}}}
+ # Congratulations!  The code compiled and is installed, but you are not quite done yet.  You still need to enable automatic logging for your account.
+
+= [HOWTO_Begin Next] =
+
+To learn about how to begin using the program, look at [HOWTO_Begin this guide.]

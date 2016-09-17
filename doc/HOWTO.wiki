@@ -1,0 +1,28 @@
+#summary Various HOWTO Guides
+#labels Featured,Phase-Implementation,Phase-Deploy
+
+= Introduction =
+
+Here are some helpful guides to help you get started with the program.
+
+{{{
+ 0>
+<?
+/ \
+}}}
+
+=== Guides ===
+
+  [HOWTO_Install How to compile and install the program.]
+
+  [HOWTO_Begin How to begin collecting history data.]
+
+  [HOWTO_Configure How to configure the program.]
+
+  [HOWTO_Query How to view command history.]
+
+  [HOWTO_Explore How to query the database manually.]
+
+  [HOWTO_Contribute How to contribute to this project.]
+
+  [HOWTO_Troubleshoot How to diagnose common problems.]

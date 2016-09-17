@@ -1,0 +1,53 @@
+#summary How to install and use this program without installing system-wide.
+#labels Phase-Implementation,Phase-Deploy,Phase-Support
+
+= Introduction =
+
+If you don't have root-access on a host but would still like to use this program, you can do that, but it requires a bit more configuration.  This guide will cover the basics needed to get you up and running.
+
+This guide assumes that you have already [HOWTO_Install downloaded and compiled] the project from source.
+
+= Steps =
+
+ # Make a direcrory to keep the required binaries and configuration in your home directory.  Here are some suggestions:
+{{{
+  mkdir -p ~/.ash/bin  # For binaries.
+  mkdir -p ~/.ash/conf  # For configuration files.
+  mkdir -p ~/.ash/lib  # For shell library code.
+}}}
+ # Copy the compiled binaries into the local binary directory.
+{{{
+  cp -a /tmp/ash-src/files/usr/local/bin/* ~/.ash/bin
+}}}
+ # Copy the required config files into the local configuration directory.
+{{{
+  cp -a /tmp/ash-src/files/etc/ash/* ~/.ash/conf
+}}}
+ # Copy the required shell library code into the local lib directory.
+{{{
+  cp -a /tmp/ash-src/files/usr/lib/advanced_shell_history/* ~/.ash/lib
+}}}
+ # Edit your local configuration file {{{~/.ash/conf/ash.conf}}} to set this value.
+{{{
+  #
+  # Setup
+  #
+  ASH_CFG_LIB='~/.ash/lib'
+}}}
+ # Add the following to your shell resource file:
+{{{
+  export ASH_CFG="~/.ash/ash.conf"
+  export PATH="${PATH}:~/.ash/bin"
+  source ~/.ash/lib/bash
+}}}
+ # Confirm that this works as expected by testing in a new terminal window.  Open a terminal window and execute the following:
+{{{
+  cd /
+  ls -l
+  ash_query -q CWD  # You should see the two commands above.
+}}}
+ # Done!  You can now explore the [HOWTO_Configure advanced configuration options.]
+
+= [HOWTO_Configure Next] =
+
+Explore the [HOWTO_Configure advanced configuration options] and customize what is logged or not logged.

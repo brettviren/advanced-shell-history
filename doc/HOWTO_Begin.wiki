@@ -1,0 +1,46 @@
+#summary How to configure the program to begin collecting data.
+
+= Introduction =
+
+Once you have [HOWTO_Install compiled and installed] the program, you need to configure it to automatically collect command history data.  This guide will walk you through the basic options to get you started.
+
+
+= Steps =
+ # If you are using the Python version, do this first:
+{{{
+  export ASH_LOG_BIN=/usr/local/bin/_ash_log.py
+}}}
+ # To begin, you need to source the correct shell code library into your shell session.  Start by manually sourcing the appropriate library in {{{/usr/lib/advanced_shell_history}}} - later you will see how to make this automatic.
+{{{
+  source /usr/lib/advanced_shell_history/bash  # for bash users
+}}}
+ # Confirm that a history database has been created by looking for it in the default location.
+{{{
+  ls ~/.ash  # you should see (at least) a history.db file.
+}}}
+ # Confirm that you are able to query the database using the {{{ash_query}}} utility.
+{{{
+  ash_query -Q  # to print the existing saved queries.
+
+  ash_query -q CWD  # to print history of commands entered inside the current working directory.
+}}}
+ # Source the shell library code automatically by adding the {{{source}}} command to your shell resource file.  Add the following to your {{{~/.bashrc}}} file (for bash users).
+{{{
+  # Enable Advanced Shell History:
+  export ASH_LOG_BIN=/usr/local/bin/_ash_log.py  # For Python users.
+  source /usr/lib/advanced_shell_history/bash
+}}}
+ # Confirm this works by opening a new terminal window and changing to a new directory and viewing history for that particular directory.  For example:
+{{{
+  # In a new terminal window.
+  cd /
+  ls -l
+  ash_query -q CWD  # You should see (at least) the previous ls command.
+}}}
+ # Done!  You may now proceed to the [HOWTO_Configure advanced configuration] guide if you wish.  Also, feel free to browse the man pages for {{{ash_query}}}.
+{{{
+  man ash_query
+}}}
+= [HOWTO_Configure Next] =
+
+Look at [HOWTO_Configure this guide] for more configuration options.

@@ -33,6 +33,8 @@ However, if you currently DO use this feature, you can still use this program.
 The code renames your existing hook and invokes it after saving the previous
 command.
 
+More information is in the [[./doc]] directory.
+
 * Caveats
 
 - this is not meant to be a security auditing tool - it's for user
