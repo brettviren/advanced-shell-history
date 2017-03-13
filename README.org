@@ -2,6 +2,11 @@
 
 Save your command line history in a sqlite3 DB!
 
+* Caveat
+
+This fork is not maintained.  Please see 
+https://github.com/barabo/advanced-shell-history
+
 * Features
 
 - Retains extra command details:
@@ -83,3 +88,4 @@ More information is in the [[./doc]] directory in the original Google Code wiki 
 - Original author: cpa@google.com (Carl Anderson)
 - Last Update: 2012-08-06 (by cpa)
 - Refresh: brett.viren@gmail.com
+- Original author returns: https://github.com/barabo/advanced-shell-history
