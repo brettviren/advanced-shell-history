@@ -1,2 +1,6 @@
 /files/
 /overlay.tar.gz
+*~
+.waf*
+.lock-waf*
+build
