@@ -9,12 +9,19 @@ def options(opt):
     opt.load('compiler_cxx')
     opt.add_option('--user', action='store_true', default=False,
                    help='Install into user directory.')
+    opt.add_option('--with-sqlite', type='string', 
+                   help='Give sqlite3 installation location.')
 
 def configure(conf):
     conf.load('compiler_cxx')
 
     conf.env.CXXFLAGS += "-Wall -ansi -pedantic -O2".split()
     conf.env.CXXFLAGS += ['-DASH_VERSION="%s"' % VERSION]
+
+    sqlite = conf.options.with_sqlite
+    if sqlite:
+        conf.env.INCLUDES_sqlite3 = [ osp.join(sqlite,'include') ]
+        conf.env.LIBPATH_sqlite3 = [ osp.join(sqlite,'lib') ]
     conf.check_cc(lib='sqlite3', uselib_store='sqlite3', mandatory=True)
 
     conf.env.BINDIR = osp.join(conf.env.PREFIX,'bin')
