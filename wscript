@@ -63,15 +63,12 @@ def build(bld):
     bld.install_files('${MANDIR}/man1',['man1/ash-log.1','man1/ash-query.1'])
 
     etcfiles = []
-    etcpath = 'files/usr/local/etc/advanced-shell-history'
     for fname in ['config', 'queries']:
         tgt = osp.join('etc', fname)
         etcfiles.append(tgt)
-        bld(rule = replace_prefix,
-            source = osp.join(etcpath, fname),
-            target = tgt)
+        bld(rule = replace_prefix, source = fname, target = tgt)
 
-    shpath = 'files/usr/local/lib/advanced_shell_history/sh/'
+    shpath = 'shell'
     for fname in ['bash', 'zsh', 'common']:
         tgt = osp.join('etc', fname)
         etcfiles.append(tgt)
